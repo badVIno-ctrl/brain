@@ -1,0 +1,1326 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Цифровой Нейродвойник — Viora</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+:root{
+  --bg:#0F292F;--logic:#14A098;--creativity:#CB2D6F;--depth:#501F3A;
+  --depth-light:#9B4F7E;--text:#CCCCCC;
+  --glass:rgba(255,255,255,0.04);--glass-b:rgba(255,255,255,0.08);
+  --gl:rgba(20,160,152,0.3);--gc:rgba(203,45,111,0.3);--gd:rgba(155,79,126,0.3);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;overflow-x:hidden}
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-thumb{background:var(--logic);border-radius:2px}
+
+/* Ambient */
+body::before{content:'';position:fixed;inset:0;
+  background-image:linear-gradient(rgba(20,160,152,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(20,160,152,0.025) 1px,transparent 1px);
+  background-size:60px 60px;pointer-events:none;z-index:0}
+.blob{position:fixed;border-radius:50%;filter:blur(90px);pointer-events:none;z-index:0;animation:blobMove 10s ease-in-out infinite alternate}
+.b1{width:500px;height:500px;background:rgba(20,160,152,0.07);top:-150px;right:-100px}
+.b2{width:350px;height:350px;background:rgba(203,45,111,0.05);bottom:50px;left:-80px;animation-delay:-4s}
+.b3{width:280px;height:280px;background:rgba(80,31,58,0.12);top:40%;left:40%;animation-delay:-7s}
+@keyframes blobMove{from{transform:scale(1) translate(0,0)}to{transform:scale(1.2) translate(25px,15px)}}
+
+/* Layout */
+#app{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column}
+
+/* Header */
+header{display:flex;align-items:center;justify-content:space-between;padding:18px 32px;
+  border-bottom:1px solid var(--glass-b);backdrop-filter:blur(20px);
+  background:rgba(15,41,47,0.7);position:sticky;top:0;z-index:100}
+.logo{display:flex;align-items:center;gap:12px;font-family:'Space Grotesk',sans-serif}
+.logo-icon{width:38px;height:38px;border-radius:11px;
+  background:linear-gradient(135deg,var(--logic),var(--creativity));
+  display:flex;align-items:center;justify-content:center;font-size:17px;
+  box-shadow:0 0 24px var(--gl);animation:lglow 4s ease-in-out infinite alternate}
+@keyframes lglow{from{box-shadow:0 0 16px var(--gl)}to{box-shadow:0 0 32px var(--gc)}}
+.logo-text{font-size:17px;font-weight:600;color:#fff;letter-spacing:-.3px}
+.logo-sub{font-size:10px;color:var(--logic);letter-spacing:2px;text-transform:uppercase}
+.hdr-nav{display:flex;gap:10px}
+.nav-btn{display:flex;align-items:center;gap:7px;padding:9px 18px;border-radius:11px;
+  border:1px solid var(--glass-b);background:var(--glass);color:var(--text);
+  font-size:13px;font-family:'Inter',sans-serif;cursor:pointer;transition:all .3s ease;text-decoration:none}
+.nav-btn:hover{border-color:var(--logic);background:rgba(20,160,152,0.1);color:#fff;transform:translateY(-1px);box-shadow:0 4px 16px var(--gl)}
+
+/* Main grid */
+main{flex:1;display:grid;grid-template-columns:1fr 360px;gap:20px;padding:24px 32px;max-width:1440px;margin:0 auto;width:100%}
+.left-col{display:flex;flex-direction:column;gap:18px}
+.right-col{display:flex;flex-direction:column;gap:18px}
+
+/* Glass card */
+.card{border-radius:22px;border:1px solid var(--glass-b);background:var(--glass);backdrop-filter:blur(20px);overflow:hidden}
+
+/* Brain */
+.brain-wrap{position:relative;height:400px}
+#brainCanvas{width:100%;height:100%;display:block}
+.brain-ui{position:absolute;inset:0;pointer-events:none;display:flex;flex-direction:column;justify-content:space-between;padding:20px 24px}
+.brain-title h2{font-family:'Space Grotesk',sans-serif;font-size:19px;font-weight:600;color:#fff;margin-bottom:3px}
+.brain-title p{font-size:11px;color:var(--text);opacity:.6;letter-spacing:1px;text-transform:uppercase}
+.legend{display:flex;gap:18px}
+.leg-item{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text);opacity:.75}
+.leg-dot{width:7px;height:7px;border-radius:50%;animation:ldot 2.5s ease-in-out infinite}
+.leg-dot.l{background:var(--logic);box-shadow:0 0 6px var(--logic);animation-delay:0s}
+.leg-dot.c{background:var(--creativity);box-shadow:0 0 6px var(--creativity);animation-delay:.8s}
+.leg-dot.d{background:var(--depth-light);box-shadow:0 0 6px var(--depth-light);animation-delay:1.6s}
+@keyframes ldot{0%,100%{transform:scale(1);opacity:.7}50%{transform:scale(1.5);opacity:1}}
+
+/* Zones row */
+.zones-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.zone-c{padding:16px;border-radius:18px;border:1px solid var(--glass-b);background:var(--glass);backdrop-filter:blur(10px);transition:all .3s}
+.zone-c:hover{transform:translateY(-2px)}
+.zone-c.l:hover{border-color:var(--logic);box-shadow:0 4px 20px var(--gl)}
+.zone-c.c:hover{border-color:var(--creativity);box-shadow:0 4px 20px var(--gc)}
+.zone-c.d:hover{border-color:var(--depth-light);box-shadow:0 4px 20px var(--gd)}
+.z-label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;opacity:.55;margin-bottom:7px}
+.z-score{font-family:'Space Grotesk',sans-serif;font-size:30px;font-weight:700;margin-bottom:7px}
+.z-score.l{color:var(--logic)}.z-score.c{color:var(--creativity)}.z-score.d{color:var(--depth-light)}
+.z-bar{height:3px;border-radius:2px;background:rgba(255,255,255,0.07);overflow:hidden}
+.z-fill{height:100%;border-radius:2px;transition:width .9s cubic-bezier(.4,0,.2,1)}
+.z-fill.l{background:linear-gradient(90deg,var(--logic),#1ECFC6)}
+.z-fill.c{background:linear-gradient(90deg,var(--creativity),#E84C8A)}
+.z-fill.d{background:linear-gradient(90deg,var(--depth),var(--depth-light))}
+
+/* Mood tracker */
+.mood-section{padding:20px}
+.sec-title{font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:600;color:#fff;
+  display:flex;align-items:center;gap:8px;margin-bottom:14px}
+.sec-dot{width:6px;height:6px;border-radius:50%;background:var(--logic);animation:ldot 2s ease-in-out infinite}
+.mood-row{display:flex;gap:8px;flex-wrap:wrap}
+.mood-btn{padding:8px 14px;border-radius:20px;border:1px solid var(--glass-b);background:rgba(255,255,255,.03);
+  color:var(--text);font-size:13px;cursor:pointer;transition:all .3s;display:flex;align-items:center;gap:5px}
+.mood-btn:hover{border-color:rgba(255,255,255,.2);background:rgba(255,255,255,.06);transform:translateY(-1px)}
+.mood-btn.active{border-color:var(--logic);background:rgba(20,160,152,.12);color:#fff}
+.mood-graph{margin-top:14px;display:flex;align-items:flex-end;gap:5px;height:50px}
+.mood-bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px}
+.mood-bar-col{width:100%;background:rgba(255,255,255,.04);border-radius:4px 4px 0 0;position:relative;overflow:hidden;min-height:4px;transition:height .6s ease}
+.mood-bar-fill{position:absolute;bottom:0;left:0;right:0;border-radius:4px 4px 0 0;transition:height .6s ease}
+.mood-day{font-size:9px;opacity:.4;letter-spacing:.5px}
+
+/* Right panel — Test launch */
+.test-panel{padding:22px;flex:1}
+.tp-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.tp-title{font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:600;color:#fff}
+.tp-count{font-size:11px;color:var(--text);opacity:.45}
+.prog-track{height:2px;background:rgba(255,255,255,.06);border-radius:1px;margin:10px 0 18px;overflow:hidden}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--logic),var(--creativity));border-radius:1px;transition:width .6s ease}
+.tp-sub{font-size:12px;color:var(--text);opacity:.5;line-height:1.6;margin-bottom:18px}
+
+.test-list{display:flex;flex-direction:column;gap:9px}
+.test-item{display:flex;align-items:center;gap:13px;padding:13px 15px;border-radius:14px;
+  border:1px solid var(--glass-b);background:rgba(255,255,255,.02);cursor:pointer;
+  transition:all .3s ease;position:relative;overflow:hidden}
+.test-item::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.02));opacity:0;transition:opacity .3s}
+.test-item:hover::after{opacity:1}
+.test-item:hover{border-color:rgba(255,255,255,.12);transform:translateX(3px);background:rgba(255,255,255,.035)}
+.test-item.done{border-color:rgba(20,160,152,.25);background:rgba(20,160,152,.04)}
+.test-item.locked{opacity:.45;cursor:not-allowed}
+.ti-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.ti-icon.l{background:rgba(20,160,152,.14)}.ti-icon.c{background:rgba(203,45,111,.14)}.ti-icon.d{background:rgba(80,31,58,.4)}
+.ti-info{flex:1;min-width:0}
+.ti-name{font-size:13px;font-weight:500;color:#fff;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ti-desc{font-size:11px;opacity:.45;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ti-right{flex-shrink:0}
+.check-ico{width:20px;height:20px;border-radius:50%;background:var(--logic);display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff}
+.arr-ico{color:rgba(255,255,255,.2);font-size:16px;transition:all .3s}
+.test-item:hover .arr-ico{color:var(--logic);transform:translateX(2px)}
+
+/* Compatibility section */
+.compat-section{padding:20px}
+.compat-btn{width:100%;padding:13px;border-radius:14px;border:1px solid rgba(203,45,111,.25);
+  background:rgba(203,45,111,.06);color:rgba(203,45,111,.9);font-size:13px;font-family:'Inter',sans-serif;
+  cursor:pointer;transition:all .3s;display:flex;align-items:center;justify-content:center;gap:8px}
+.compat-btn:hover{border-color:var(--creativity);background:rgba(203,45,111,.12);color:#fff;box-shadow:0 4px 20px var(--gc)}
+
+/* Theses mini */
+.theses-mini{padding:18px}
+.thesis-chip{display:flex;align-items:flex-start;gap:8px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.04)}
+.thesis-chip:last-child{border-bottom:none}
+.tc-dot{width:5px;height:5px;border-radius:50%;margin-top:6px;flex-shrink:0}
+.tc-text{font-size:12px;line-height:1.55;opacity:.75}
+
+/* ───── MODAL ───── */
+.overlay{position:fixed;inset:0;background:rgba(10,30,35,.88);backdrop-filter:blur(14px);
+  z-index:200;display:flex;align-items:center;justify-content:center;padding:16px;
+  opacity:0;pointer-events:none;transition:opacity .35s ease}
+.overlay.on{opacity:1;pointer-events:all}
+.modal{width:100%;max-width:620px;border-radius:26px;border:1px solid var(--glass-b);
+  background:rgba(13,38,44,.97);backdrop-filter:blur(30px);padding:32px;
+  transform:translateY(28px) scale(.97);transition:transform .4s cubic-bezier(.34,1.56,.64,1);position:relative;overflow:hidden}
+.modal::before{content:'';position:absolute;top:-100px;right:-100px;width:220px;height:220px;
+  border-radius:50%;background:var(--gl);filter:blur(70px);pointer-events:none}
+.overlay.on .modal{transform:translateY(0) scale(1)}
+
+.m-close{position:absolute;top:18px;right:18px;width:34px;height:34px;border-radius:9px;
+  border:1px solid var(--glass-b);background:rgba(255,255,255,.04);color:var(--text);
+  font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .3s}
+.m-close:hover{background:rgba(255,255,255,.09);color:#fff}
+
+.m-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:20px;
+  font-size:10px;letter-spacing:1.2px;text-transform:uppercase;font-weight:500;margin-bottom:12px}
+.m-badge.l{background:rgba(20,160,152,.15);color:var(--logic);border:1px solid rgba(20,160,152,.3)}
+.m-badge.c{background:rgba(203,45,111,.15);color:var(--creativity);border:1px solid rgba(203,45,111,.3)}
+.m-badge.d{background:rgba(80,31,58,.5);color:var(--depth-light);border:1px solid rgba(155,79,126,.3)}
+
+.m-q{font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:500;color:#fff;line-height:1.5;margin-bottom:22px;animation:qappear .5s cubic-bezier(.34,1.56,.64,1) both}
+@keyframes qappear{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+
+/* Timer */
+.timer-row{display:flex;align-items:center;gap:10px;margin-bottom:20px}
+.timer-track{flex:1;height:4px;border-radius:2px;background:rgba(255,255,255,.07);overflow:hidden}
+.timer-fill{height:100%;border-radius:2px;transition:width .1s linear,background .5s}
+.timer-lbl{font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:600;min-width:28px;text-align:right;transition:color .4s}
+
+/* Options */
+.options-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}
+.opt-btn{padding:15px 18px;border-radius:15px;border:1px solid var(--glass-b);background:rgba(255,255,255,.03);
+  color:var(--text);font-size:13px;font-family:'Inter',sans-serif;cursor:pointer;
+  transition:all .28s ease;text-align:left;line-height:1.45;position:relative;overflow:hidden}
+.opt-btn::before{content:'';position:absolute;inset:0;opacity:0;transition:opacity .3s}
+.opt-btn:hover::before{opacity:1}
+.opt-btn:hover{border-color:rgba(255,255,255,.2);transform:translateY(-2px);color:#fff;box-shadow:0 6px 20px rgba(0,0,0,.3)}
+.opt-btn.l::before{background:rgba(20,160,152,.08)}.opt-btn.l:hover{border-color:var(--logic)}
+.opt-btn.c::before{background:rgba(203,45,111,.08)}.opt-btn.c:hover{border-color:var(--creativity)}
+.opt-btn.d::before{background:rgba(155,79,126,.08)}.opt-btn.d:hover{border-color:var(--depth-light)}
+.opt-btn.selected{border-color:var(--logic)!important;background:rgba(20,160,152,.12)!important;color:#fff!important}
+.opt-letter{font-size:10px;opacity:.45;margin-bottom:4px;letter-spacing:.5px}
+
+/* Speed badge */
+.speed-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:8px;font-size:11px;margin-top:6px}
+.speed-badge.fast{background:rgba(203,45,111,.15);color:var(--creativity);border:1px solid rgba(203,45,111,.25)}
+.speed-badge.medium{background:rgba(20,160,152,.12);color:var(--logic);border:1px solid rgba(20,160,152,.2)}
+.speed-badge.slow{background:rgba(155,79,126,.15);color:var(--depth-light);border:1px solid rgba(155,79,126,.25)}
+
+/* Result */
+.result-block{padding:18px;border-radius:16px;background:rgba(255,255,255,.025);border:1px solid var(--glass-b);animation:qappear .45s ease both;margin-top:18px}
+.r-thesis{font-size:14px;font-weight:500;color:#fff;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--glass-b)}
+.r-rec-label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--logic);margin-bottom:6px}
+.r-rec{font-size:13px;line-height:1.7;color:var(--text)}
+.r-speed-note{font-size:12px;color:var(--creativity);margin-top:8px;opacity:.85;font-style:italic}
+
+/* Step indicator */
+.step-row{display:flex;gap:5px;margin-bottom:22px}
+.step-dot{height:3px;border-radius:2px;flex:1;background:rgba(255,255,255,.08);transition:background .4s}
+.step-dot.active{background:var(--logic)}
+.step-dot.done{background:rgba(20,160,152,.4)}
+
+/* Branch path label */
+.branch-label{font-size:11px;color:var(--text);opacity:.4;margin-bottom:16px;display:flex;align-items:center;gap:6px}
+.branch-icon{font-size:12px}
+
+/* Continue btn */
+.btn-continue{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;
+  padding:13px;border-radius:13px;border:none;background:linear-gradient(135deg,var(--logic),#1ECFC6);
+  color:#fff;font-family:'Inter',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:all .3s}
+.btn-continue:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(20,160,152,.4)}
+.btn-continue:disabled{opacity:.4;cursor:not-allowed;transform:none}
+
+/* Spinner */
+.spin{width:16px;height:16px;border:2px solid rgba(255,255,255,.25);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Compat modal content */
+.compat-content{display:flex;flex-direction:column;gap:16px}
+.compat-textarea{width:100%;min-height:100px;padding:14px;border-radius:13px;border:1px solid var(--glass-b);
+  background:rgba(255,255,255,.03);color:#fff;font-family:'Inter',sans-serif;font-size:13px;
+  line-height:1.6;resize:vertical;outline:none;transition:all .3s}
+.compat-textarea:focus{border-color:var(--creativity);background:rgba(203,45,111,.04);box-shadow:0 0 0 3px rgba(203,45,111,.08)}
+.compat-textarea::placeholder{color:rgba(204,204,204,.25)}
+.compat-result{padding:16px;border-radius:14px;background:rgba(203,45,111,.06);border:1px solid rgba(203,45,111,.2);animation:qappear .4s ease both}
+.compat-score{font-family:'Space Grotesk',sans-serif;font-size:40px;font-weight:700;color:var(--creativity);text-align:center;margin:10px 0}
+.compat-label{font-size:12px;text-align:center;opacity:.6;margin-bottom:12px}
+.compat-text{font-size:13px;line-height:1.7;color:var(--text)}
+
+/* Notif */
+.notif{position:fixed;bottom:72px;right:20px;padding:12px 18px;border-radius:13px;
+  background:rgba(20,160,152,.15);border:1px solid rgba(20,160,152,.3);backdrop-filter:blur(20px);
+  font-size:13px;color:#fff;z-index:400;transform:translateX(120%);transition:transform .4s cubic-bezier(.34,1.56,.64,1);max-width:270px}
+.notif.show{transform:translateX(0)}
+
+/* Studio */
+.studio{position:fixed;bottom:18px;left:18px;display:flex;align-items:center;gap:7px;
+  padding:7px 13px;border-radius:9px;border:1px solid var(--glass-b);background:rgba(15,41,47,.85);
+  backdrop-filter:blur(10px);color:rgba(204,204,204,.45);font-size:11px;font-family:'Space Grotesk',sans-serif;
+  text-decoration:none;transition:all .3s;z-index:100}
+.studio:hover{color:var(--logic);border-color:var(--logic);background:rgba(20,160,152,.07)}
+.studio-dot{width:5px;height:5px;border-radius:50%;background:var(--logic);animation:ldot 2s ease-in-out infinite}
+
+/* Responsive */
+@media(max-width:920px){
+  main{grid-template-columns:1fr;padding:16px;gap:14px}
+  .brain-wrap{height:280px}
+  .zones-row{gap:9px}
+  header{padding:13px 18px}
+}
+@media(max-width:520px){
+  .options-grid{grid-template-columns:1fr}
+  .modal{padding:22px;border-radius:20px}
+  .m-q{font-size:15px}
+  .hdr-nav .nav-btn span:last-child{display:none}
+}
+
+/* Fade in page */
+#app{animation:pageIn .6s ease both}
+@keyframes pageIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* Daily insight pulse */
+.insight-card{padding:18px;border-radius:18px;background:linear-gradient(135deg,rgba(20,160,152,.08),rgba(80,31,58,.15));
+  border:1px solid rgba(20,160,152,.15);position:relative;overflow:hidden}
+.insight-card::before{content:'';position:absolute;top:-40px;right:-40px;width:120px;height:120px;
+  border-radius:50%;background:radial-gradient(circle,rgba(20,160,152,.15),transparent 70%);pointer-events:none}
+.insight-title{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--logic);margin-bottom:8px;opacity:.8}
+.insight-text{font-size:13px;line-height:1.65;color:var(--text);opacity:.9}
+.insight-refresh{margin-top:10px;display:flex;align-items:center;gap:6px;font-size:11px;color:var(--logic);cursor:pointer;opacity:.6;transition:opacity .2s;background:none;border:none;font-family:'Inter',sans-serif}
+.insight-refresh:hover{opacity:1}
+</style>
+</head>
+<body>
+<div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+
+<div id="app">
+<header>
+  <div class="logo">
+    <div class="logo-icon">🧠</div>
+    <div><div class="logo-text">Нейродвойник</div><div class="logo-sub">Digital Neural Twin</div></div>
+  </div>
+  <div class="hdr-nav">
+    <a href="m.html" class="nav-btn"><span>👤</span><span>Профиль и чат</span></a>
+  </div>
+</header>
+
+<main>
+  <!-- LEFT -->
+  <div class="left-col">
+
+    <!-- Brain -->
+    <div class="card brain-wrap">
+      <canvas id="brainCanvas"></canvas>
+      <div class="brain-ui">
+        <div class="brain-title">
+          <h2>Нейро-модель</h2>
+          <p>Визуализация вашего психотипа</p>
+        </div>
+        <div class="legend">
+          <div class="leg-item"><div class="leg-dot l"></div>Логика</div>
+          <div class="leg-item"><div class="leg-dot c"></div>Творчество</div>
+          <div class="leg-item"><div class="leg-dot d"></div>Глубина</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Zone scores -->
+    <div class="zones-row">
+      <div class="zone-c l"><div class="z-label">Логика</div><div class="z-score l" id="sl">0</div><div class="z-bar"><div class="z-fill l" id="bl" style="width:0%"></div></div></div>
+      <div class="zone-c c"><div class="z-label">Творчество</div><div class="z-score c" id="sc">0</div><div class="z-bar"><div class="z-fill c" id="bc" style="width:0%"></div></div></div>
+      <div class="zone-c d"><div class="z-label">Глубина</div><div class="z-score d" id="sd">0</div><div class="z-bar"><div class="z-fill d" id="bd" style="width:0%"></div></div></div>
+    </div>
+
+    <!-- Mood Tracker -->
+    <div class="card">
+      <div class="mood-section">
+        <div class="sec-title"><div class="sec-dot"></div>Трекер настроения</div>
+        <div class="mood-row" id="moodRow">
+          <div class="mood-btn" data-val="5" onclick="setMood(5)">😄 Отлично</div>
+          <div class="mood-btn" data-val="4" onclick="setMood(4)">🙂 Хорошо</div>
+          <div class="mood-btn" data-val="3" onclick="setMood(3)">😐 Нейтрально</div>
+          <div class="mood-btn" data-val="2" onclick="setMood(2)">😔 Устал</div>
+          <div class="mood-btn" data-val="1" onclick="setMood(1)">😞 Плохо</div>
+        </div>
+        <div class="mood-graph" id="moodGraph"></div>
+      </div>
+    </div>
+
+    <!-- Daily insight -->
+    <div class="card">
+      <div style="padding:18px">
+        <div class="sec-title"><div class="sec-dot"></div>Инсайт дня</div>
+        <div class="insight-card">
+          <div class="insight-title">✦ Viora говорит</div>
+          <div class="insight-text" id="insightText">Нажмите обновить, чтобы получить персональный инсайт...</div>
+          <button class="insight-refresh" id="insightBtn">↻ Обновить инсайт</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Theses mini -->
+    <div class="card" id="thesesCard" style="display:none">
+      <div class="theses-mini">
+        <div class="sec-title"><div class="sec-dot"></div>Что Viora знает о вас</div>
+        <div id="thesesMini"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- RIGHT -->
+  <div class="right-col">
+
+    <!-- Tests -->
+    <div class="card test-panel">
+      <div class="tp-header">
+        <div class="tp-title">Психо-тесты</div>
+        <div class="tp-count" id="tpCount">0 / 0</div>
+      </div>
+      <div class="prog-track"><div class="prog-fill" id="progFill" style="width:0%"></div></div>
+      <div class="tp-sub">Каждый тест адаптируется под ваши ответы. Таймер фиксирует скорость — она тоже информативна.</div>
+      <div class="test-list" id="testList"></div>
+    </div>
+
+    <!-- Compatibility -->
+    <div class="card compat-section">
+      <div class="sec-title"><div class="sec-dot"></div>Анализ другого человека</div>
+      <div style="font-size:12px;color:var(--text);opacity:.5;margin-bottom:12px;line-height:1.6">
+        Опишите знакомого — Viora составит его психопортрет и проверит совместимость с вашим профилем.
+      </div>
+      <button class="compat-btn" id="compatBtn">💞 Проверить совместимость</button>
+    </div>
+
+  </div>
+</main>
+</div>
+
+<!-- Test Modal -->
+<div class="overlay" id="testOverlay">
+  <div class="modal" id="testModal">
+    <button class="m-close" id="mClose">✕</button>
+    <div class="m-badge" id="mBadge"></div>
+    <div class="step-row" id="stepRow"></div>
+    <div class="branch-label" id="branchLabel" style="display:none"><span class="branch-icon">⤷</span><span id="branchText"></span></div>
+    <div class="m-q" id="mQ"></div>
+    <div class="timer-row">
+      <div class="timer-track"><div class="timer-fill" id="timerFill" style="width:100%"></div></div>
+      <div class="timer-lbl" id="timerLbl">30</div>
+    </div>
+    <div class="options-grid" id="optGrid"></div>
+    <div id="resultArea"></div>
+    <button class="btn-continue" id="btnContinue" style="display:none"></button>
+  </div>
+</div>
+
+<!-- Compat Modal -->
+<div class="overlay" id="compatOverlay">
+  <div class="modal" id="compatModal">
+    <button class="m-close" id="cmClose">✕</button>
+    <div class="m-badge c" style="margin-bottom:14px">💞 Анализ совместимости</div>
+    <div class="m-q" style="font-size:15px;margin-bottom:18px">Опишите человека, которого хотите проанализировать</div>
+    <div class="compat-content">
+      <textarea class="compat-textarea" id="compatInput" placeholder="Расскажите о нём / ней: характер, поведение, привычки, как принимает решения, реагирует на конфликты, что ценит..."></textarea>
+      <button class="btn-continue" id="compatSend" style="background:linear-gradient(135deg,var(--creativity),#E84C8A)">
+        <span id="csText">Анализировать</span><span id="csIcon">→</span>
+      </button>
+      <div id="compatResult" style="display:none"></div>
+    </div>
+  </div>
+</div>
+
+<div class="notif" id="notif"></div>
+<a href="https://t.me/VioraStudio" target="_blank" class="studio"><div class="studio-dot"></div>Viora Studio</a>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  BRANCHING TEST TREE
+//  Structure: each test is a tree of nodes.
+//  Each option can lead to a next node OR end the branch.
+// ═══════════════════════════════════════════════════════
+const TREES = [
+  // ── 1. CRISIS DECISION ──
+  {
+    id:'crisis', icon:'⚡', name:'Момент выбора', desc:'Как вы действуете в кризис', zone:'logic',
+    nodes:{
+      start:{
+        q:'Горит дедлайн. До сдачи проекта 2 часа, и вы обнаружили критическую ошибку. Что делаете первым?',
+        opts:[
+          {t:'Немедленно сообщаю команде — ошибка общая ответственность', next:'team', zone:'logic'},
+          {t:'Пытаюсь исправить сам, чтобы не паниковать других', next:'solo', zone:'creativity'},
+          {t:'Оцениваю масштаб ошибки — может, не так страшно?', next:'assess', zone:'logic'},
+          {t:'Первым делом думаю, как объяснить заказчику', next:'client', zone:'depth'}
+        ]
+      },
+      team:{
+        q:'Команда знает. Один говорит "исправим", другой хочет перенести дедлайн. Ваша позиция?',
+        branch:'Вы выбрали прозрачность — теперь нужно решение',
+        opts:[
+          {t:'Поддержу того, у кого более конкретный план', next:'end_l', zone:'logic'},
+          {t:'Предложу компромисс: исправляем критическое, остальное потом', next:'end_l', zone:'logic'},
+        ]
+      },
+      solo:{
+        q:'Вы потратили час, исправить не получается. Команда ещё не знает. Время критично.',
+        branch:'Вы решили работать в одиночку',
+        opts:[
+          {t:'Признаюсь команде — упустил время, но честность важнее', next:'end_c', zone:'depth'},
+          {t:'Сдам как есть — лучше что-то, чем ничего', next:'end_c', zone:'creativity'},
+        ]
+      },
+      assess:{
+        q:'Ошибка некритична, но заметна. Клиент может принять или отклонить. Что решите?',
+        branch:'Вы мыслите системно — оцениваете прежде чем действовать',
+        opts:[
+          {t:'Сдам — и буду готов объяснить и исправить', next:'end_l', zone:'logic'},
+          {t:'Скажу клиенту заранее — лучше честно', next:'end_d', zone:'depth'},
+        ]
+      },
+      client:{
+        q:'Клиент — важный партнёр. Что вы скажете ему в первую очередь?',
+        branch:'Вы думаете о последствиях и отношениях',
+        opts:[
+          {t:'Проблема есть, но мы уже работаем над решением', next:'end_d', zone:'depth'},
+          {t:'Попрошу небольшое время — выйду с готовым ответом', next:'end_d', zone:'depth'},
+        ]
+      },
+      end_l:{q:null,thesis:'Принимает структурные решения под давлением, мыслит системно',rec:'Развивайте умение делегировать — не каждую задачу нужно контролировать лично.',zone:'logic',score:8},
+      end_c:{q:null,thesis:'Склонен сначала действовать самостоятельно, принимает ответственность лично',rec:'Попробуйте чаще спрашивать помощи раньше — это не слабость, а эффективность.',zone:'creativity',score:6},
+      end_d:{q:null,thesis:'Строит решения вокруг отношений и долгосрочных последствий',rec:'Ваша ориентация на людей — сила. Убедитесь, что она не мешает принимать быстрые решения.',zone:'depth',score:7},
+    }
+  },
+
+  // ── 2. CREATIVE BLOCK ──
+  {
+    id:'creative', icon:'🎨', name:'Пустой холст', desc:'Ваш творческий процесс', zone:'creativity',
+    nodes:{
+      start:{
+        q:'Вам нужно создать что-то новое — проект, идею, решение. Но мысли не идут. Что происходит внутри?',
+        opts:[
+          {t:'Раздражение — я должен это сделать, почему не выходит', next:'pressure', zone:'logic'},
+          {t:'Любопытство — значит, нужно поискать в другом месте', next:'explore', zone:'creativity'},
+          {t:'Тревога — а вдруг я вообще не способен на это?', next:'anxiety', zone:'depth'},
+          {t:'Спокойствие — ждю, когда придёт само', next:'wait', zone:'depth'}
+        ]
+      },
+      pressure:{
+        q:'Давление есть. Что помогает вам выйти из ступора?',
+        branch:'Внутренний критик активен — это говорит о высоких стандартах',
+        opts:[
+          {t:'Жёсткий дедлайн — под давлением я лучше', next:'end_l', zone:'logic'},
+          {t:'Разбиваю задачу на части — хоть что-то сделать', next:'end_l', zone:'logic'},
+        ]
+      },
+      explore:{
+        q:'Вы ищете вдохновение. Где вы его обычно находите?',
+        branch:'Ваш творческий ум ищет связи там, где их не ждут',
+        opts:[
+          {t:'В случайных разговорах и неожиданных местах', next:'end_c', zone:'creativity'},
+          {t:'В чужих работах, которые меня восхищают', next:'end_c', zone:'creativity'},
+        ]
+      },
+      anxiety:{
+        q:'Тревога о способностях — с ней знакомы многие. Как вы с ней справляетесь?',
+        branch:'Самокритика — признак внутренней глубины',
+        opts:[
+          {t:'Вспоминаю прошлые успехи — значит, могу', next:'end_d', zone:'depth'},
+          {t:'Просто начинаю делать что угодно — движение лечит', next:'end_c', zone:'creativity'},
+        ]
+      },
+      wait:{
+        q:'Вы умеете ждать. Но если дедлайн неизбежен — что тогда?',
+        branch:'Терпение — редкое и ценное качество',
+        opts:[
+          {t:'Создаю условия: тишина, прогулка, смена обстановки', next:'end_d', zone:'depth'},
+          {t:'Делаю черновик — плохой вариант лучше пустоты', next:'end_l', zone:'logic'},
+        ]
+      },
+      end_l:{q:null,thesis:'Работает лучше под структурой и конкретными ограничениями',rec:'Попробуйте метод "ugly first draft" — намеренно плохой черновик снимает страх.',zone:'creativity',score:7},
+      end_c:{q:null,thesis:'Интуитивный тип — черпает вдохновение из окружающего мира',rec:'Ведите "банк идей" — любая мелочь, услышанная или увиденная. Ваш ум умеет соединять точки.',zone:'creativity',score:9},
+      end_d:{q:null,thesis:'Глубоко саморефлексирующий, использует внутренние ресурсы для выхода из кризиса',rec:'Ваш способ работать через себя — это сила. Доверяйте процессу даже когда страшно.',zone:'depth',score:8},
+    }
+  },
+
+  // ── 3. CONFLICT ──
+  {
+    id:'conflict', icon:'🤝', name:'Точка конфликта', desc:'Паттерны в отношениях', zone:'depth',
+    nodes:{
+      start:{
+        q:'Близкий вам человек сделал что-то, что вас глубоко задело. Вы всё ещё думаете об этом. Как вы реагируете?',
+        opts:[
+          {t:'Говорю прямо — мне важно прояснить это сейчас', next:'direct', zone:'logic'},
+          {t:'Жду подходящего момента — не хочу ссоры', next:'wait', zone:'depth'},
+          {t:'Отдаляюсь молча — нужно время переварить', next:'withdraw', zone:'depth'},
+          {t:'Стараюсь понять, почему они так поступили', next:'empathy', zone:'creativity'}
+        ]
+      },
+      direct:{
+        q:'Вы говорите прямо. Человек защищается и не признаёт проблему. Что дальше?',
+        branch:'Прямота — это ценность, которую вы защищаете',
+        opts:[
+          {t:'Настаиваю на своём — мне важно быть услышанным', next:'end_l', zone:'logic'},
+          {t:'Делаю шаг назад — конфликт не стоит отношений', next:'end_d', zone:'depth'},
+        ]
+      },
+      wait:{
+        q:'Вы ждёте момента. Он наступил. Но страх испортить отношения всё ещё есть.',
+        branch:'Вы бережёте других — даже в ущерб себе',
+        opts:[
+          {t:'Говорю мягко, избегая обвинений', next:'end_d', zone:'depth'},
+          {t:'Так и не говорю — решаю отпустить', next:'end_d', zone:'depth'},
+        ]
+      },
+      withdraw:{
+        q:'Вы отдалились. Человек замечает и спрашивает, что случилось.',
+        branch:'Вам нужно пространство — это законно',
+        opts:[
+          {t:'Отвечаю честно — мне нужно время, потом поговорим', next:'end_d', zone:'depth'},
+          {t:'Говорю "всё хорошо" — не готов к разговору', next:'end_d', zone:'depth'},
+        ]
+      },
+      empathy:{
+        q:'Вы пытаетесь понять их мотивы. Что вы чаще всего обнаруживаете?',
+        branch:'Эмпатия как первая реакция — редкий дар',
+        opts:[
+          {t:'Что у них был свой страх или боль в тот момент', next:'end_c', zone:'creativity'},
+          {t:'Что мы просто смотрим на ситуацию по-разному', next:'end_l', zone:'logic'},
+        ]
+      },
+      end_l:{q:null,thesis:'Прямой коммуникатор, ценит ясность и честность в отношениях',rec:'Попробуйте формулу "я чувствую... когда... потому что..." — она сохраняет ясность без обвинений.',zone:'depth',score:7},
+      end_c:{q:null,thesis:'Высокая эмпатия: первым делом ищет причину, а не виноватого',rec:'Ваша эмпатия — суперсила. Убедитесь, что вы не забываете о собственных границах.',zone:'creativity',score:9},
+      end_d:{q:null,thesis:'Интровертная модель переработки — предпочитает осмыслить внутри перед разговором',rec:'Скажите близким о своей потребности во времени заранее — это снимет тревогу у обеих сторон.',zone:'depth',score:8},
+    }
+  },
+
+  // ── 4. VALUES ──
+  {
+    id:'values', icon:'🧭', name:'Ценностный компас', desc:'Что движет вашими решениями', zone:'logic',
+    nodes:{
+      start:{
+        q:'Вам предложили работу мечты. Но она требует переезда в другой город и разлуки с близкими на год. Ваша первая реакция?',
+        opts:[
+          {t:'Это шанс — я должен использовать его', next:'ambition', zone:'logic'},
+          {t:'Не могу — близкие важнее любой карьеры', next:'family', zone:'depth'},
+          {t:'Надо поговорить с близкими — решение общее', next:'together', zone:'depth'},
+          {t:'Ищу компромисс — может, есть гибрид?', next:'hybrid', zone:'creativity'}
+        ]
+      },
+      ambition:{
+        q:'Вы нацелены на рост. Что для вас означает "успех" через 10 лет?',
+        branch:'Амбиция как компас — вы знаете, чего хотите',
+        opts:[
+          {t:'Финансовая свобода и независимость', next:'end_l', zone:'logic'},
+          {t:'Влияние — чтобы мои решения что-то меняли в мире', next:'end_l', zone:'logic'},
+        ]
+      },
+      family:{
+        q:'Вы выбираете близких. Но через год вы узнаёте, что коллега, отказавшийся в похожей ситуации, об этом жалеет. Что чувствуете?',
+        branch:'Связь — ваша высшая ценность',
+        opts:[
+          {t:'Ничего — я бы сделал то же снова', next:'end_d', zone:'depth'},
+          {t:'Лёгкое сомнение, но я принял правильное решение для себя', next:'end_d', zone:'depth'},
+        ]
+      },
+      together:{
+        q:'Близкие говорят "решай сам — мы поддержим". Как это на вас влияет?',
+        branch:'Вы строите решения через диалог',
+        opts:[
+          {t:'Это облегчает — я принимаю предложение', next:'end_d', zone:'depth'},
+          {t:'Это усложняет — мне важно знать их настоящее мнение', next:'end_d', zone:'depth'},
+        ]
+      },
+      hybrid:{
+        q:'Вы предлагаете гибридный формат. Компания отказывает — только переезд. Финальный выбор?',
+        branch:'Вы мыслите нестандартно — ищете третий путь',
+        opts:[
+          {t:'Принимаю — шанс стоит жертвы', next:'end_c', zone:'creativity'},
+          {t:'Отказываюсь — принцип важнее оффера', next:'end_c', zone:'creativity'},
+        ]
+      },
+      end_l:{q:null,thesis:'Целеориентированная личность с высокой мотивацией к достижениям',rec:'Убедитесь, что ваши цели — действительно ваши, а не навязанные извне стандарты успеха.',zone:'logic',score:8},
+      end_c:{q:null,thesis:'Ищет нестандартные решения, не принимает бинарных выборов',rec:'Ваша гибкость — сила. Иногда принятие ограничений — это тоже форма свободы.',zone:'creativity',score:7},
+      end_d:{q:null,thesis:'Строит жизнь вокруг связей и смысла, а не внешних достижений',rec:'Ваши приоритеты зрелые. Периодически проверяйте: не жертвуете ли вы собой ради других?',zone:'depth',score:9},
+    }
+  },
+
+  // ── 5. FEAR ──
+  {
+    id:'fear', icon:'🪞', name:'Отражение страха', desc:'Что вы избегаете и почему', zone:'depth',
+    nodes:{
+      start:{
+        q:'Представьте: вы долго откладывали что-то важное. Почему именно это — самое трудное для вас?',
+        opts:[
+          {t:'Боюсь сделать плохо — лучше не начинать', next:'perfect', zone:'depth'},
+          {t:'Не знаю, с чего начать — задача кажется огромной', next:'overwhelm', zone:'logic'},
+          {t:'Боюсь, что это изменит меня или мою жизнь', next:'change', zone:'depth'},
+          {t:'Мне это на самом деле не так важно, как казалось', next:'priority', zone:'logic'}
+        ]
+      },
+      perfect:{
+        q:'Перфекционизм защищает от провала. Но какой ценой?',
+        branch:'Страх несовершенства — самый умный страх',
+        opts:[
+          {t:'Я теряю время и возможности — это меня злит', next:'end_d', zone:'depth'},
+          {t:'Это даёт мне высокое качество — я принимаю эту цену', next:'end_l', zone:'logic'},
+        ]
+      },
+      overwhelm:{
+        q:'Задача огромна. Что помогло бы вам начать прямо сейчас?',
+        branch:'Паралич от масштаба — не слабость, а чувствительность к сложности',
+        opts:[
+          {t:'Разбить на шаги и сделать первый — самый маленький', next:'end_l', zone:'logic'},
+          {t:'Поговорить с кем-то, кто уже делал такое', next:'end_d', zone:'depth'},
+        ]
+      },
+      change:{
+        q:'Вы боитесь, что успех изменит вас. Что именно вы боитесь потерять?',
+        branch:'Страх изменений — это привязанность к текущей идентичности',
+        opts:[
+          {t:'Себя настоящего — кем я стану, если добьюсь?', next:'end_d', zone:'depth'},
+          {t:'Отношения — близкие могут отдалиться', next:'end_d', zone:'depth'},
+        ]
+      },
+      priority:{
+        q:'Вы честно признаёте, что это не приоритет. Но почему вы всё ещё думаете об этом?',
+        branch:'Честность с собой — уже победа',
+        opts:[
+          {t:'Потому что внешне я должен это хотеть', next:'end_d', zone:'depth'},
+          {t:'Потому что отпустить тоже трудно', next:'end_d', zone:'depth'},
+        ]
+      },
+      end_l:{q:null,thesis:'Прагматичный подход к препятствиям — ищет инструмент, а не причину',rec:'Используйте технику "следующий маленький шаг" — не план на год, а один конкретный шаг сегодня.',zone:'logic',score:7},
+      end_d:{q:null,thesis:'Глубокая саморефлексия: прокапывается до корневых причин своих блоков',rec:'Вы уже делаете самое трудное — видите себя честно. Теперь дайте себе столько же сострадания, сколько дали бы другу.',zone:'depth',score:10},
+    }
+  },
+
+  // ── 6. INTUITION ──
+  {
+    id:'intuition', icon:'🔮', name:'Внутренний голос', desc:'Как вы принимаете решения', zone:'creativity',
+    nodes:{
+      start:{
+        q:'Вы должны принять важное решение. Данных мало, времени тоже. На что опираетесь?',
+        opts:[
+          {t:'На факты — даже скудные лучше, чем ничего', next:'data', zone:'logic'},
+          {t:'На интуицию — тело подсказывает правильный путь', next:'gut', zone:'creativity'},
+          {t:'На мнение людей, которым доверяю', next:'social', zone:'depth'},
+          {t:'Откладываю — лучше подождать больше информации', next:'delay', zone:'logic'}
+        ]
+      },
+      data:{
+        q:'Данные указывают в одну сторону, но что-то внутри сопротивляется. Что вы делаете?',
+        branch:'Аналитик с интуитивным фоном',
+        opts:[
+          {t:'Доверяю данным — чувства субъективны', next:'end_l', zone:'logic'},
+          {t:'Исследую, откуда это сопротивление — возможно, я что-то знаю', next:'end_c', zone:'creativity'},
+        ]
+      },
+      gut:{
+        q:'Интуиция сработала. Оглядываясь назад, как часто она вас не подводила?',
+        branch:'Интуиция — это опыт, говорящий быстро',
+        opts:[
+          {t:'Чаще права, чем нет — я ей доверяю', next:'end_c', zone:'creativity'},
+          {t:'Бывает по-разному — но я всё равно прислушиваюсь', next:'end_c', zone:'creativity'},
+        ]
+      },
+      social:{
+        q:'Один человек говорит "да", другой "нет". Чьё мнение весит больше и почему?',
+        branch:'Вы принимаете решения в контексте доверия',
+        opts:[
+          {t:'Того, кто лучше знает эту область', next:'end_l', zone:'logic'},
+          {t:'Того, кто лучше знает меня', next:'end_d', zone:'depth'},
+        ]
+      },
+      delay:{
+        q:'Время вышло — решение нужно прямо сейчас. Что происходит?',
+        branch:'Под давлением проявляется истинный стиль мышления',
+        opts:[
+          {t:'Делаю лучшее из возможного с тем, что есть', next:'end_l', zone:'logic'},
+          {t:'Переключаюсь в интуитивный режим — думать некогда', next:'end_c', zone:'creativity'},
+        ]
+      },
+      end_l:{q:null,thesis:'Рационально-аналитический стиль принятия решений, ищет объективные опоры',rec:'Доверяйте интуиции как источнику данных — она кодирует паттерны, которые разум ещё не обработал.',zone:'logic',score:8},
+      end_c:{q:null,thesis:'Интуитивный тип: решения принимает быстро, доверяет внутренним сигналам',rec:'Ваша интуиция — настоящий актив. Развивайте её осознанностью: медитация улучшает качество интуитивных сигналов.',zone:'creativity',score:9},
+      end_d:{q:null,thesis:'Решения принимает через призму доверия и человеческих отношений',rec:'Вы строите решения на доверии — убедитесь, что ваш внутренний голос тоже входит в круг доверенных.',zone:'depth',score:8},
+    }
+  },
+
+  // ── 7. IDENTITY ──
+  {
+    id:'identity', icon:'✨', name:'Кто вы на самом деле', desc:'Финальная интроспекция', zone:'depth',
+    nodes:{
+      start:{
+        q:'Если бы вас могла описать одна фраза — та, которую вы сами про себя знаете, но редко говорите вслух — какой бы она была?',
+        opts:[
+          {t:'Я сильнее, чем выгляжу', next:'strength', zone:'depth'},
+          {t:'Я ещё не нашёл себя до конца', next:'seeking', zone:'creativity'},
+          {t:'Я устал притворяться, что всё в порядке', next:'tired', zone:'depth'},
+          {t:'Я знаю, чего хочу — мне просто страшно', next:'afraid', zone:'depth'}
+        ]
+      },
+      strength:{
+        q:'Откуда берётся эта сила — что является её источником для вас?',
+        branch:'Вы несёте больше, чем показываете',
+        opts:[
+          {t:'Из всего, что я уже пережил', next:'end_d', zone:'depth'},
+          {t:'Из людей, ради которых я держусь', next:'end_d', zone:'depth'},
+        ]
+      },
+      seeking:{
+        q:'Поиск себя — это не кризис, это процесс. Что вы уже точно о себе знаете?',
+        branch:'Незавершённость — знак честности с собой',
+        opts:[
+          {t:'Я знаю, что мне важно — даже если не знаю, кто я', next:'end_c', zone:'creativity'},
+          {t:'Я знаю, кем я не хочу быть — это тоже компас', next:'end_c', zone:'creativity'},
+        ]
+      },
+      tired:{
+        q:'Усталость от маски — это важный сигнал. Есть ли рядом кто-то, перед кем вы можете быть собой?',
+        branch:'Маска защищает — но дорого стоит',
+        opts:[
+          {t:'Да, один-два человека — и это много', next:'end_d', zone:'depth'},
+          {t:'Нет — и это одиноко', next:'end_d', zone:'depth'},
+        ]
+      },
+      afraid:{
+        q:'Вы знаете, чего хотите. Что именно останавливает — страх чего?',
+        branch:'Ясность желания при страхе действия — самая честная точка роста',
+        opts:[
+          {t:'Страх разочаровать других', next:'end_d', zone:'depth'},
+          {t:'Страх, что у меня не получится', next:'end_d', zone:'depth'},
+        ]
+      },
+      end_d:{q:null,thesis:'Глубокая внутренняя жизнь с высоким уровнем самосознания',rec:'Вы уже знаете очень много о себе. Следующий шаг — позволить этому знанию менять ваши действия, не только мысли.',zone:'depth',score:10},
+      end_c:{q:null,thesis:'Находится в активном поиске идентичности — это признак психологической зрелости',rec:'Люди, которые ищут себя осознанно, находят нечто настоящее. Доверяйте процессу — вы уже на пути.',zone:'creativity',score:9},
+    }
+  }
+];
+
+// ═══════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════
+let ST = JSON.parse(localStorage.getItem('nd2_state')||'null') || {
+  scores:{logic:0,creativity:0,depth:0},
+  completed:[],
+  theses:[],
+  mood:[]
+};
+
+const KEYS=['j3mqlc3v9pZuvsRLE3D2s7scygdudqe1','G9CuVLq1Sfw7BZr4kSBuCReNrHvQNsno'];
+let ki=0;
+function save(){localStorage.setItem('nd2_state',JSON.stringify(ST))}
+
+// ═══════════════════════════════════════════════════════
+//  THREE.JS
+// ═══════════════════════════════════════════════════════
+let scene,cam,rend,pts,clk;
+const PC=4000;
+let pColors;
+let mx=0,my=0;
+
+function initBrain(){
+  const cv=document.getElementById('brainCanvas');
+  const pw=cv.parentElement.clientWidth, ph=cv.parentElement.clientHeight;
+  scene=new THREE.Scene();
+  cam=new THREE.PerspectiveCamera(58,pw/ph,.1,1000);
+  cam.position.z=3;
+  rend=new THREE.WebGLRenderer({canvas:cv,alpha:true,antialias:true});
+  rend.setSize(pw,ph);rend.setPixelRatio(Math.min(devicePixelRatio,2));
+  rend.setClearColor(0,0);
+  clk=new THREE.Clock();
+  const geo=new THREE.BufferGeometry();
+  const pos=new Float32Array(PC*3);
+  pColors=new Float32Array(PC*3);
+  const cols={logic:new THREE.Color(0x14A098),creativity:new THREE.Color(0xCB2D6F),depth:new THREE.Color(0x9B4F7E)};
+  for(let i=0;i<PC;i++){
+    const phi=Math.acos(-1+(2*i)/PC);
+    const th=Math.sqrt(PC*Math.PI)*phi;
+    const r=1+.12*Math.sin(phi*7)*Math.cos(th*5);
+    const x=r*Math.sin(phi)*Math.cos(th)*(1+.08*Math.sin(th*3));
+    const y=r*Math.cos(phi)*1.15;
+    const z=r*Math.sin(phi)*Math.sin(th)*.88;
+    pos[i*3]=x;pos[i*3+1]=y;pos[i*3+2]=z;
+    const zone=y>.3?'logic':x>0?'creativity':'depth';
+    const intensity=Math.min(1,.35+ST.scores[zone]/80);
+    pColors[i*3]=cols[zone].r*intensity;
+    pColors[i*3+1]=cols[zone].g*intensity;
+    pColors[i*3+2]=cols[zone].b*intensity;
+  }
+  geo.setAttribute('position',new THREE.BufferAttribute(pos,3));
+  geo.setAttribute('color',new THREE.BufferAttribute(pColors,3));
+  pts=new THREE.Points(geo,new THREE.PointsMaterial({size:.016,vertexColors:true,transparent:true,opacity:.88,sizeAttenuation:true}));
+  scene.add(pts);
+  cv.parentElement.addEventListener('mousemove',e=>{
+    const r=cv.getBoundingClientRect();
+    mx=((e.clientX-r.left)/r.width-.5)*2;
+    my=((e.clientY-r.top)/r.height-.5)*2;
+  });
+  window.addEventListener('resize',()=>{
+    const w=cv.parentElement.clientWidth,h=cv.parentElement.clientHeight;
+    cam.aspect=w/h;cam.updateProjectionMatrix();rend.setSize(w,h);
+  });
+  (function loop(){
+    requestAnimationFrame(loop);
+    const t=clk.getElapsedTime();
+    pts.rotation.y+=.0016+mx*.0002;
+    pts.rotation.x+=.0003+my*.00015;
+    const s=1+.012*Math.sin(t*.75);
+    pts.scale.set(s,s,s);
+    rend.render(scene,cam);
+  })();
+}
+
+function flashZone(zone){
+  const pos=pts.geometry.attributes.position.array;
+  const col=pts.geometry.attributes.color.array;
+  const C={logic:new THREE.Color(0x14A098),creativity:new THREE.Color(0xCB2D6F),depth:new THREE.Color(0x9B4F7E)};
+  for(let i=0;i<PC;i++){
+    const x=pos[i*3],y=pos[i*3+1];
+    const z2=y>.3?'logic':x>0?'creativity':'depth';
+    if(z2===zone){
+      const iv=Math.min(1,.55+ST.scores[zone]/60);
+      col[i*3]=C[zone].r*iv;col[i*3+1]=C[zone].g*iv;col[i*3+2]=C[zone].b*iv;
+    }
+  }
+  pts.geometry.attributes.color.needsUpdate=true;
+}
+
+// ═══════════════════════════════════════════════════════
+//  UI
+// ═══════════════════════════════════════════════════════
+function renderTests(){
+  const el=document.getElementById('testList');
+  el.innerHTML='';
+  TREES.forEach(t=>{
+    const done=ST.completed.includes(t.id);
+    const d=document.createElement('div');
+    d.className=`test-item ${done?'done':''}`;
+    d.innerHTML=`
+      <div class="ti-icon ${t.zone[0]}">${t.icon}</div>
+      <div class="ti-info"><div class="ti-name">${t.name}</div><div class="ti-desc">${t.desc}</div></div>
+      <div class="ti-right">${done?'<div class="check-ico">✓</div>':'<div class="arr-ico">›</div>'}</div>
+    `;
+    if(!done)d.addEventListener('click',()=>startTest(t));
+    el.appendChild(d);
+  });
+  const done=ST.completed.length,total=TREES.length;
+  document.getElementById('tpCount').textContent=`${done} / ${total}`;
+  document.getElementById('progFill').style.width=`${(done/total)*100}%`;
+}
+
+function updateScores(){
+  ['logic','creativity','depth'].forEach(z=>{
+    const s=ST.scores[z]||0;
+    document.getElementById('s'+z[0]).textContent=s;
+    document.getElementById('b'+z[0]).style.width=`${Math.min(100,(s/80)*100)}%`;
+  });
+}
+
+function renderTheses(){
+  const th=ST.theses;
+  const card=document.getElementById('thesesCard');
+  const mini=document.getElementById('thesesMini');
+  if(!th.length){card.style.display='none';return}
+  card.style.display='block';
+  const colors={logic:'#14A098',creativity:'#CB2D6F',depth:'#9B4F7E'};
+  mini.innerHTML=th.slice(-5).reverse().map(t=>`
+    <div class="thesis-chip">
+      <div class="tc-dot" style="background:${colors[t.zone]}"></div>
+      <div class="tc-text">${t.text}</div>
+    </div>
+  `).join('');
+}
+
+// ═══════════════════════════════════════════════════════
+//  MOOD TRACKER
+// ═══════════════════════════════════════════════════════
+function setMood(val){
+  const today=new Date().toISOString().split('T')[0];
+  const existing=ST.mood.findIndex(m=>m.date===today);
+  if(existing>=0)ST.mood[existing].val=val;
+  else ST.mood.push({date:today,val});
+  if(ST.mood.length>14)ST.mood=ST.mood.slice(-14);
+  save();
+  document.querySelectorAll('.mood-btn').forEach(b=>{
+    b.classList.toggle('active',+b.dataset.val===val);
+  });
+  renderMoodGraph();
+  showNotif('Настроение записано ✓');
+}
+
+function renderMoodGraph(){
+  const g=document.getElementById('moodGraph');
+  const days=[];
+  for(let i=6;i>=0;i--){
+    const d=new Date();d.setDate(d.getDate()-i);
+    days.push(d.toISOString().split('T')[0]);
+  }
+  const colors=['#501F3A','#9B4F7E','#14A098','#1ECFC6','#CB2D6F'];
+  const labels=['пн','вт','ср','чт','пт','сб','вс'];
+  const dayNames=['sun','mon','tue','wed','thu','fri','sat'];
+  g.innerHTML=days.map((day,i)=>{
+    const entry=ST.mood.find(m=>m.date===day);
+    const h=entry?`${entry.val*16}px`:'4px';
+    const col=entry?colors[entry.val-1]:'rgba(255,255,255,.07)';
+    const dn=new Date(day);
+    const dayLabel=['вс','пн','вт','ср','чт','пт','сб'][dn.getDay()];
+    return `<div class="mood-bar-wrap">
+      <div class="mood-bar-col" style="height:${entry?entry.val*16:4}px;background:${col};border-radius:4px 4px 0 0;box-shadow:${entry?`0 0 8px ${col}40`:''};"></div>
+      <div class="mood-day">${dayLabel}</div>
+    </div>`;
+  }).join('');
+
+  // Mark today
+  const todayEntry=ST.mood.find(m=>m.date===new Date().toISOString().split('T')[0]);
+  if(todayEntry){
+    document.querySelectorAll('.mood-btn').forEach(b=>{
+      b.classList.toggle('active',+b.dataset.val===todayEntry.val);
+    });
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  BRANCHING TEST ENGINE
+// ═══════════════════════════════════════════════════════
+let curTree=null, curNodeId=null, curPath=[], answerTimes=[];
+let timerInterval=null, timerStart=0, timerSeconds=30;
+let selectedOpt=null;
+
+const TIMER_MAX=30;
+
+function startTest(tree){
+  curTree=tree;curNodeId='start';curPath=[];answerTimes=[];selectedOpt=null;
+  renderNode();
+  document.getElementById('testOverlay').classList.add('on');
+}
+
+function renderNode(){
+  const node=curTree.nodes[curNodeId];
+  if(!node||node.q===null){showResult();return}
+
+  // Badge
+  const zNames={logic:'⚡ Логика',creativity:'✦ Творчество',depth:'◈ Глубина'};
+  const zC={logic:'l',creativity:'c',depth:'d'};
+  const badge=document.getElementById('mBadge');
+  badge.className=`m-badge ${zC[curTree.zone]}`;
+  badge.textContent=zNames[curTree.zone];
+
+  // Steps
+  renderSteps();
+
+  // Branch label
+  const bl=document.getElementById('branchLabel');
+  if(node.branch){bl.style.display='flex';document.getElementById('branchText').textContent=node.branch}
+  else bl.style.display='none';
+
+  // Question
+  document.getElementById('mQ').textContent=node.q;
+  document.getElementById('mQ').className='m-q';
+  void document.getElementById('mQ').offsetWidth; // reflow for animation
+
+  // Options
+  renderOptions(node.opts);
+
+  // Result area
+  document.getElementById('resultArea').innerHTML='';
+  document.getElementById('btnContinue').style.display='none';
+
+  // Timer
+  startTimer();
+}
+
+function renderSteps(){
+  // Count total possible steps in this branch (approx depth)
+  const stepEl=document.getElementById('stepRow');
+  const depth=estimateDepth(curTree,curNodeId);
+  const total=curPath.length+depth;
+  stepEl.innerHTML='';
+  for(let i=0;i<total;i++){
+    const d=document.createElement('div');
+    d.className=`step-dot ${i<curPath.length?'done':i===curPath.length?'active':''}`;
+    stepEl.appendChild(d);
+  }
+}
+
+function estimateDepth(tree,nodeId,d=0){
+  if(d>6)return 6;
+  const n=tree.nodes[nodeId];
+  if(!n||n.q===null)return 0;
+  if(!n.opts||!n.opts.length)return 1;
+  return 1+Math.max(...n.opts.map(o=>estimateDepth(tree,o.next,d+1)));
+}
+
+function renderOptions(opts){
+  const grid=document.getElementById('optGrid');
+  const cols=['A','B','C','D'];
+  const zC={logic:'l',creativity:'c',depth:'d'};
+  grid.innerHTML=opts.map((o,i)=>`
+    <button class="opt-btn ${zC[o.zone]||'l'}" onclick="selectOpt(${i})" id="opt${i}">
+      <div class="opt-letter">${cols[i]}</div>
+      ${o.t}
+    </button>
+  `).join('');
+  selectedOpt=null;
+}
+
+function selectOpt(idx){
+  selectedOpt=idx;
+  const elapsed=TIMER_MAX-(timerSeconds);
+  answerTimes.push(elapsed);
+  stopTimer();
+
+  document.querySelectorAll('.opt-btn').forEach((b,i)=>{
+    b.classList.toggle('selected',i===idx);
+    if(i!==idx)b.style.opacity='.45';
+  });
+
+  const node=curTree.nodes[curNodeId];
+  const opt=node.opts[idx];
+
+  // Speed badge
+  let speedClass='medium',speedText='⏱ Вдумчиво';
+  if(elapsed<=6){speedClass='fast';speedText='⚡ Молниеносно — интуитивный ответ'}
+  else if(elapsed<=15){speedClass='medium';speedText='🎯 Осознанно'}
+  else{speedClass='slow';speedText='🔍 Глубокое обдумывание'}
+
+  document.getElementById('resultArea').innerHTML=`<div class="speed-badge ${speedClass}">${speedText}</div>`;
+
+  // Advance or end
+  const nextNode=curTree.nodes[opt.next];
+  if(!nextNode||nextNode.q===null){
+    // End node
+    setTimeout(()=>proceedToEnd(opt,elapsed),800);
+  } else {
+    // Continue to next node
+    const btn=document.getElementById('btnContinue');
+    btn.style.display='flex';
+    btn.textContent='Следующий вопрос →';
+    btn.disabled=false;
+    btn.onclick=()=>{
+      curPath.push(curNodeId);
+      curNodeId=opt.next;
+      renderNode();
+    };
+  }
+}
+
+function proceedToEnd(opt,elapsed){
+  const endNode=curTree.nodes[opt.next];
+  const fast=elapsed<=6;
+  const slow=elapsed>=20;
+
+  // Build analysis
+  let thesis=endNode.thesis;
+  let rec=endNode.rec;
+
+  if(fast){
+    thesis+=' Реагирует инстинктивно, доверяет первому импульсу.';
+    rec='Ваши быстрые ответы показывают — вы уже знаете. Теперь научитесь доверять этому знанию осознанно.';
+  } else if(slow){
+    thesis+=' Склонен к глубокому обдумыванию перед действием.';
+  }
+
+  const zone=endNode.zone||curTree.zone;
+  const score=endNode.score||7;
+
+  ST.scores[zone]=(ST.scores[zone]||0)+score;
+  if(!ST.completed.includes(curTree.id))ST.completed.push(curTree.id);
+  ST.theses.push({zone,text:thesis,timestamp:Date.now()});
+  save();
+
+  updateScores();renderTests();renderTheses();flashZone(zone);
+
+  const speedNote=fast?'⚡ Вы ответили очень быстро — это интуитивная реакция, она многое говорит о вашем настоящем отношении к ситуации.':
+    slow?'🔍 Вы долго обдумывали — это значит, что вопрос действительно задел что-то важное.':'';
+
+  document.getElementById('resultArea').innerHTML=`
+    <div class="result-block">
+      <div class="r-thesis">💡 ${thesis}</div>
+      <div class="r-rec-label">Рекомендация Viora</div>
+      <div class="r-rec">${rec}</div>
+      ${speedNote?`<div class="r-speed-note">${speedNote}</div>`:''}
+    </div>
+  `;
+  const btn=document.getElementById('btnContinue');
+  btn.style.display='flex';btn.textContent='Готово ✓';btn.disabled=false;
+  btn.onclick=closeTestModal;
+
+  showNotif(`+${score} очков · ${zone==='logic'?'Логика':zone==='creativity'?'Творчество':'Глубина'}`);
+}
+
+function showResult(){
+  // fallback if tree ends unexpectedly
+  closeTestModal();
+}
+
+// ═══════════════════════════════════════════════════════
+//  TIMER
+// ═══════════════════════════════════════════════════════
+function startTimer(){
+  timerSeconds=TIMER_MAX;
+  timerStart=Date.now();
+  updateTimerUI();
+  timerInterval=setInterval(()=>{
+    timerSeconds=Math.max(0,TIMER_MAX-Math.floor((Date.now()-timerStart)/1000));
+    updateTimerUI();
+    if(timerSeconds===0){
+      stopTimer();
+      // Auto select random option if not answered
+      if(selectedOpt===null){
+        const node=curTree.nodes[curNodeId];
+        const ri=Math.floor(Math.random()*node.opts.length);
+        selectOpt(ri);
+      }
+    }
+  },200);
+}
+
+function stopTimer(){clearInterval(timerInterval)}
+
+function updateTimerUI(){
+  const pct=(timerSeconds/TIMER_MAX)*100;
+  const fill=document.getElementById('timerFill');
+  const lbl=document.getElementById('timerLbl');
+  fill.style.width=pct+'%';
+  const col=timerSeconds>15?'var(--logic)':timerSeconds>8?'#E8A020':'var(--creativity)';
+  fill.style.background=col;
+  lbl.style.color=col;
+  lbl.textContent=timerSeconds;
+}
+
+function closeTestModal(){
+  stopTimer();
+  document.getElementById('testOverlay').classList.remove('on');
+}
+
+document.getElementById('mClose').addEventListener('click',closeTestModal);
+document.getElementById('testOverlay').addEventListener('click',e=>{if(e.target===e.currentTarget)closeTestModal()});
+
+// ═══════════════════════════════════════════════════════
+//  DAILY INSIGHT
+// ═══════════════════════════════════════════════════════
+async function fetchInsight(){
+  const btn=document.getElementById('insightBtn');
+  const txt=document.getElementById('insightText');
+  btn.textContent='↻ Загружаю...';btn.disabled=true;
+  txt.style.opacity='.4';
+
+  const th=ST.theses;
+  const total=(ST.scores.logic||0)+(ST.scores.creativity||0)+(ST.scores.depth||0);
+
+  let prompt;
+  if(!th.length){
+    prompt='Дай короткий (2-3 предложения) вдохновляющий инсайт о саморефлексии и самопознании. Пиши как мудрый психолог, без банальностей. Только чистый текст, без markdown.';
+  } else {
+    const recent=th.slice(-3).map(t=>t.text).join('. ');
+    prompt=`Ты Viora — персональный нейроаналитик. О человеке известно: ${recent}. Дай очень короткий (2-3 предложения) персонализированный инсайт или вопрос для размышления на сегодня. Без банальностей. Без markdown.`;
+  }
+
+  try{
+    const r=await callAPI([{role:'user',content:prompt}]);
+    txt.textContent=r;
+  }catch{
+    txt.textContent='Сегодняшний инсайт: каждый ответ, который вы даёте честно — это шаг к пониманию себя.';
+  }
+  txt.style.opacity='1';
+  btn.textContent='↻ Обновить инсайт';btn.disabled=false;
+
+  // Cache
+  localStorage.setItem('nd2_insight',JSON.stringify({text:txt.textContent,date:new Date().toISOString().split('T')[0]}));
+}
+
+document.getElementById('insightBtn').addEventListener('click',fetchInsight);
+
+function loadInsight(){
+  const cached=JSON.parse(localStorage.getItem('nd2_insight')||'null');
+  const today=new Date().toISOString().split('T')[0];
+  if(cached&&cached.date===today){
+    document.getElementById('insightText').textContent=cached.text;
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  COMPATIBILITY
+// ═══════════════════════════════════════════════════════
+document.getElementById('compatBtn').addEventListener('click',()=>{
+  document.getElementById('compatOverlay').classList.add('on');
+  document.getElementById('compatResult').style.display='none';
+  document.getElementById('compatInput').value='';
+});
+document.getElementById('cmClose').addEventListener('click',()=>document.getElementById('compatOverlay').classList.remove('on'));
+document.getElementById('compatOverlay').addEventListener('click',e=>{if(e.target===e.currentTarget)document.getElementById('compatOverlay').classList.remove('on')});
+
+document.getElementById('compatSend').addEventListener('click',async()=>{
+  const desc=document.getElementById('compatInput').value.trim();
+  if(!desc||desc.length<30){showNotif('Опишите человека подробнее (мин. 30 символов)');return}
+
+  const csText=document.getElementById('csText');
+  const csIcon=document.getElementById('csIcon');
+  csText.textContent='Viora анализирует';csIcon.innerHTML='<div class="spin"></div>';
+  document.getElementById('compatSend').disabled=true;
+
+  const myTheses=ST.theses.slice(-5).map(t=>t.text).join('. ');
+  const myDominant=Object.entries(ST.scores).sort((a,b)=>b[1]-a[1])[0]?.[0]||'неизвестно';
+
+  const prompt=`Ты Viora — психологический аналитик. 
+Профиль первого человека (пользователь): Доминирующая зона: ${myDominant}. Тезисы: ${myTheses||'данных нет'}.
+Описание второго человека: "${desc}".
+Сделай анализ: 1) Краткий психопортрет второго человека (2-3 предложения). 2) Оценка совместимости 0-100. 3) Сильные стороны пары. 4) Потенциальные точки напряжения. Верни JSON без markdown: {"portrait":"...","score":число,"strengths":"...","tensions":"..."}`;
+
+  try{
+    const raw=await callAPI([{role:'user',content:prompt}]);
+    let data;
+    try{const m=raw.match(/\{[\s\S]*\}/);data=JSON.parse(m[0])}
+    catch{data={portrait:'Интересная и многогранная личность.',score:72,strengths:'Взаимное уважение и открытость.',tensions:'Разные темпы принятия решений.'}}
+
+    const score=Math.max(0,Math.min(100,+data.score||70));
+    const color=score>=70?'var(--logic)':score>=50?'#E8A020':'var(--creativity)';
+
+    document.getElementById('compatResult').style.display='block';
+    document.getElementById('compatResult').innerHTML=`
+      <div class="compat-result">
+        <div class="compat-label">Индекс совместимости</div>
+        <div class="compat-score" style="color:${color}">${score}%</div>
+        <div style="font-size:13px;font-weight:500;color:#fff;margin-bottom:12px">👤 Портрет</div>
+        <div class="compat-text">${data.portrait}</div>
+        <div style="margin-top:12px;font-size:13px;font-weight:500;color:var(--logic)">✦ Сильные стороны</div>
+        <div class="compat-text" style="margin-top:6px">${data.strengths}</div>
+        <div style="margin-top:12px;font-size:13px;font-weight:500;color:var(--creativity)">⚠ Точки роста</div>
+        <div class="compat-text" style="margin-top:6px">${data.tensions}</div>
+      </div>
+    `;
+  }catch{showNotif('Ошибка анализа — попробуйте снова')}
+
+  csText.textContent='Анализировать снова';csIcon.innerHTML='→';
+  document.getElementById('compatSend').disabled=false;
+});
+
+// ═══════════════════════════════════════════════════════
+//  API
+// ═══════════════════════════════════════════════════════
+async function callAPI(messages,retry=0){
+  const key=KEYS[ki];
+  const res=await fetch('https://api.mistral.ai/v1/chat/completions',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':`Bearer ${key}`},
+    body:JSON.stringify({model:'mistral-tiny',messages,temperature:.7,max_tokens:450})
+  });
+  if(!res.ok){
+    if(retry<KEYS.length-1){ki=(ki+1)%KEYS.length;return callAPI(messages,retry+1)}
+    throw new Error(res.status);
+  }
+  const d=await res.json();
+  return d.choices[0].message.content;
+}
+
+// ═══════════════════════════════════════════════════════
+//  NOTIF
+// ═══════════════════════════════════════════════════════
+let nt;
+function showNotif(msg){
+  const n=document.getElementById('notif');
+  n.textContent=msg;n.classList.add('show');
+  clearTimeout(nt);nt=setTimeout(()=>n.classList.remove('show'),3200);
+}
+
+// ═══════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════
+initBrain();
+renderTests();
+updateScores();
+renderTheses();
+renderMoodGraph();
+loadInsight();
+if(ST.completed.length>0){['logic','creativity','depth'].forEach(z=>{if(ST.scores[z]>0)flashZone(z)})}
+</script>
+</body>
+</html>
