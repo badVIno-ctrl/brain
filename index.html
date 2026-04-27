@@ -8,8 +8,8 @@
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
 :root{
-  --bg:#0F292F;--logic:#14A098;--creativity:#CB2D6F;--depth:#501F3A;
-  --depth-light:#9B4F7E;--text:#CCCCCC;
+  --bg:#08131F;--logic:#31F7E8;--creativity:#FF4FA3;--depth:#6D5BFF;
+  --depth-light:#B27CFF;--text:#DCEBFF;
   --glass:rgba(255,255,255,0.04);--glass-b:rgba(255,255,255,0.08);
   --gl:rgba(20,160,152,0.3);--gc:rgba(203,45,111,0.3);--gd:rgba(155,79,126,0.3);
 }
@@ -57,8 +57,9 @@ main{flex:1;display:grid;grid-template-columns:1fr 360px;gap:20px;padding:24px 3
 .card{border-radius:22px;border:1px solid var(--glass-b);background:var(--glass);backdrop-filter:blur(20px);overflow:hidden}
 
 /* Brain */
-.brain-wrap{position:relative;height:400px}
+.brain-wrap{position:relative;height:400px;background:radial-gradient(circle at 50% 52%,rgba(49,247,232,.16),rgba(109,91,255,.08) 38%,rgba(8,19,31,.2) 68%);box-shadow:inset 0 0 70px rgba(49,247,232,.08)}
 #brainCanvas{width:100%;height:100%;display:block}
+.brain-wrap::before{content:'';position:absolute;inset:12%;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.08),rgba(49,247,232,.08) 35%,transparent 70%);filter:blur(18px);pointer-events:none}
 .brain-ui{position:absolute;inset:0;pointer-events:none;display:flex;flex-direction:column;justify-content:space-between;padding:20px 24px}
 .brain-title h2{font-family:'Space Grotesk',sans-serif;font-size:19px;font-weight:600;color:#fff;margin-bottom:3px}
 .brain-title p{font-size:11px;color:var(--text);opacity:.6;letter-spacing:1px;text-transform:uppercase}
@@ -253,14 +254,27 @@ main{flex:1;display:grid;grid-template-columns:1fr 360px;gap:20px;padding:24px 3
 /* Responsive */
 @media(max-width:920px){
   main{grid-template-columns:1fr;padding:16px;gap:14px}
-  .brain-wrap{height:280px}
+  .brain-wrap{height:340px}
   .zones-row{gap:9px}
   header{padding:13px 18px}
 }
 @media(max-width:520px){
+  .brain-wrap{height:360px}
+  .brain-ui{padding:16px}
+  .legend{gap:10px;flex-wrap:wrap}
+  .zones-row{grid-template-columns:1fr}
+  .zone-c{padding:14px}
+  .support-actions{grid-template-columns:1fr}
+  .support-btn,.mini-btn,.portrait-btn,.compat-btn,.btn-continue{min-height:46px}
+  .journey,.patterns,.support-box,.portrait-unlock,.mood-section,.compat-section,.theses-mini{padding:16px}
   .options-grid{grid-template-columns:1fr}
-  .modal{padding:22px;border-radius:20px}
+  .overlay{padding:10px;align-items:flex-start;overflow-y:auto}
+  .modal{padding:22px;border-radius:20px;max-height:calc(100vh - 20px);overflow-y:auto;margin:10px 0}
   .m-q{font-size:15px}
+  .quest-input,.analysis-input,.compat-textarea,.portrait-textarea{font-size:16px}
+  .notif{left:12px;right:12px;bottom:18px;max-width:none;transform:translateY(140%)}
+  .notif.show{transform:translateY(0)}
+  .studio{display:none}
   .hdr-nav .nav-btn span:last-child{display:none}
 }
 
@@ -277,6 +291,47 @@ main{flex:1;display:grid;grid-template-columns:1fr 360px;gap:20px;padding:24px 3
 .insight-text{font-size:13px;line-height:1.65;color:var(--text);opacity:.9}
 .insight-refresh{margin-top:10px;display:flex;align-items:center;gap:6px;font-size:11px;color:var(--logic);cursor:pointer;opacity:.6;transition:opacity .2s;background:none;border:none;font-family:'Inter',sans-serif}
 .insight-refresh:hover{opacity:1}
+.journey{padding:20px}
+.journey-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+.journey-day{font-size:11px;color:var(--logic);letter-spacing:1px;text-transform:uppercase}
+.quest-card{padding:16px;border-radius:18px;background:linear-gradient(135deg,rgba(49,247,232,.08),rgba(178,124,255,.08));border:1px solid rgba(49,247,232,.18)}
+.quest-q{font-size:15px;line-height:1.55;color:#fff;margin-bottom:10px}
+.quest-input,.analysis-input{width:100%;min-height:92px;padding:13px;border-radius:14px;border:1px solid var(--glass-b);background:rgba(255,255,255,.035);color:#fff;font-family:'Inter',sans-serif;font-size:13px;line-height:1.55;resize:vertical;outline:none}
+.quest-input:focus,.analysis-input:focus{border-color:var(--logic);box-shadow:0 0 0 3px rgba(49,247,232,.08)}
+.mini-btn{margin-top:10px;border:none;border-radius:12px;padding:11px 14px;background:linear-gradient(135deg,var(--logic),#1ECFC6);color:#041014;font-family:'Inter',sans-serif;font-weight:600;font-size:12px;cursor:pointer;transition:all .25s}
+.mini-btn:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(49,247,232,.2)}
+.journey-dots{display:flex;gap:6px;margin-top:13px}
+.journey-dot{height:5px;flex:1;border-radius:4px;background:rgba(255,255,255,.08)}
+.journey-dot.done{background:linear-gradient(90deg,var(--logic),var(--depth-light));box-shadow:0 0 10px rgba(49,247,232,.25)}
+.ai-result{margin-top:12px;padding:14px;border-radius:14px;background:rgba(255,255,255,.035);border:1px solid var(--glass-b);font-size:13px;line-height:1.65;color:var(--text)}
+.patterns{padding:20px}
+.pattern-tags{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.pattern-tag{padding:8px 11px;border-radius:999px;border:1px solid var(--glass-b);background:rgba(255,255,255,.03);color:var(--text);font-size:12px;cursor:pointer;transition:all .2s}
+.pattern-tag.active{border-color:var(--creativity);background:rgba(255,79,163,.12);color:#fff}
+.pattern-list{display:flex;flex-direction:column;gap:8px}
+.pattern-item{padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.025);border:1px solid var(--glass-b);font-size:12px;line-height:1.45;color:var(--text)}
+.support-box{padding:18px;background:linear-gradient(135deg,rgba(255,79,163,.08),rgba(49,247,232,.06))}
+.support-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.support-btn{border:1px solid var(--glass-b);border-radius:13px;background:rgba(255,255,255,.035);color:var(--text);padding:11px;font-family:'Inter',sans-serif;font-size:12px;cursor:pointer;transition:all .25s}
+.support-btn:hover{border-color:var(--logic);color:#fff;background:rgba(49,247,232,.08)}
+.support-result{margin-top:12px;font-size:13px;line-height:1.65;color:var(--text);opacity:.9}
+.portrait-unlock{padding:20px;background:linear-gradient(135deg,rgba(49,247,232,.1),rgba(255,79,163,.08),rgba(178,124,255,.1));position:relative}
+.portrait-btn{width:100%;padding:14px;border:none;border-radius:15px;background:linear-gradient(135deg,var(--logic),var(--creativity));color:#fff;font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all .3s;box-shadow:0 10px 30px rgba(49,247,232,.12)}
+.portrait-btn:hover{transform:translateY(-2px);box-shadow:0 14px 34px rgba(255,79,163,.18)}
+.portrait-btn:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:none}
+.portrait-modal{max-width:760px;max-height:88vh;overflow-y:auto}
+.portrait-hero{padding:18px;border-radius:18px;background:radial-gradient(circle at top right,rgba(255,79,163,.16),transparent 45%),linear-gradient(135deg,rgba(49,247,232,.08),rgba(178,124,255,.08));border:1px solid rgba(49,247,232,.18);margin-bottom:14px}
+.portrait-title{font-family:'Space Grotesk',sans-serif;font-size:24px;font-weight:700;color:#fff;margin-bottom:6px}
+.portrait-sub{font-size:13px;line-height:1.65;color:var(--text);opacity:.76}
+.portrait-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.portrait-card{padding:14px;border-radius:15px;background:rgba(255,255,255,.035);border:1px solid var(--glass-b)}
+.portrait-card.wide{grid-column:1/-1}
+.portrait-label{font-size:10px;letter-spacing:1.4px;text-transform:uppercase;color:var(--logic);margin-bottom:7px}
+.portrait-text{font-size:13px;line-height:1.65;color:var(--text)}
+.portrait-situation{margin-top:14px;padding:14px;border-radius:16px;border:1px solid rgba(255,79,163,.18);background:rgba(255,79,163,.055)}
+.portrait-textarea{width:100%;min-height:80px;margin-top:10px;padding:12px;border-radius:13px;border:1px solid var(--glass-b);background:rgba(255,255,255,.035);color:#fff;font-family:'Inter',sans-serif;font-size:13px;line-height:1.55;resize:vertical;outline:none}
+.portrait-answer{margin-top:10px;font-size:13px;line-height:1.65;color:var(--text)}
+@media(max-width:520px){.portrait-grid{grid-template-columns:1fr}.portrait-title{font-size:20px}}
 </style>
 </head>
 <body>
@@ -335,6 +390,29 @@ main{flex:1;display:grid;grid-template-columns:1fr 360px;gap:20px;padding:24px 3
       </div>
     </div>
 
+    <div class="card journey">
+      <div class="journey-head">
+        <div class="sec-title" style="margin-bottom:0"><div class="sec-dot"></div>Путь самопознания</div>
+        <div class="journey-day" id="journeyDay">День 1 / 7</div>
+      </div>
+      <div class="quest-card">
+        <div class="quest-q" id="questQ"></div>
+        <textarea class="quest-input" id="questInput" placeholder="Ответьте честно. Это сохранится только в вашем браузере..."></textarea>
+        <button class="mini-btn" id="questBtn">Сохранить и получить инсайт</button>
+        <div id="questResult"></div>
+        <div class="journey-dots" id="journeyDots"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="patterns">
+        <div class="sec-title"><div class="sec-dot"></div>Карта внутренних паттернов</div>
+        <div style="font-size:12px;color:var(--text);opacity:.55;margin-bottom:12px;line-height:1.6">Отмечайте, что повторяется. Viora покажет, какой внутренний механизм может стоять за этим.</div>
+        <div class="pattern-tags" id="patternTags"></div>
+        <div class="pattern-list" id="patternList"></div>
+      </div>
+    </div>
+
     <!-- Daily insight -->
     <div class="card">
       <div style="padding:18px">
@@ -360,6 +438,24 @@ main{flex:1;display:grid;grid-template-columns:1fr 360px;gap:20px;padding:24px 3
   <!-- RIGHT -->
   <div class="right-col">
 
+    <div class="card portrait-unlock" id="portraitUnlock">
+      <div class="sec-title"><div class="sec-dot"></div>Финальный портрет</div>
+      <div style="font-size:12px;color:var(--text);opacity:.62;margin-bottom:13px;line-height:1.6">После всех тестов Viora соберёт вашу карту личности: талант, внутренний конфликт, способ проходить трудности и следующий шаг.</div>
+      <button class="portrait-btn" id="portraitBtn">✨ Раскрыть мой портрет</button>
+    </div>
+
+    <div class="card support-box">
+      <div class="sec-title"><div class="sec-dot"></div>Мне сложно сейчас</div>
+      <div style="font-size:12px;color:var(--text);opacity:.62;margin-bottom:12px;line-height:1.6">Быстрый режим поддержки: выбрать состояние → получить короткий следующий шаг.</div>
+      <div class="support-actions">
+        <button class="support-btn" data-support="anxiety">Тревога</button>
+        <button class="support-btn" data-support="sadness">Тяжесть</button>
+        <button class="support-btn" data-support="anger">Злость</button>
+        <button class="support-btn" data-support="numb">Пустота</button>
+      </div>
+      <div class="support-result" id="supportResult"></div>
+    </div>
+
     <!-- Tests -->
     <div class="card test-panel">
       <div class="tp-header">
@@ -380,8 +476,36 @@ main{flex:1;display:grid;grid-template-columns:1fr 360px;gap:20px;padding:24px 3
       <button class="compat-btn" id="compatBtn">💞 Проверить совместимость</button>
     </div>
 
+    <div class="card">
+      <div class="patterns">
+        <div class="sec-title"><div class="sec-dot"></div>Разбор ситуации</div>
+        <div style="font-size:12px;color:var(--text);opacity:.55;margin-bottom:12px;line-height:1.6">Опишите конфликт, тревогу или решение. Viora разложит это на эмоцию, потребность, мысль и маленький шаг.</div>
+        <textarea class="analysis-input" id="situationInput" placeholder="Например: я откладываю важный разговор, хотя понимаю, что он нужен..."></textarea>
+        <button class="mini-btn" id="situationBtn">Разобрать ситуацию</button>
+        <div id="situationResult"></div>
+      </div>
+    </div>
+
   </div>
 </main>
+</div>
+
+<div class="overlay" id="portraitOverlay">
+  <div class="modal portrait-modal">
+    <button class="m-close" id="portraitClose">✕</button>
+    <div class="portrait-hero">
+      <div class="portrait-title">Ваш внутренний портрет</div>
+      <div class="portrait-sub" id="portraitIntro">Viora собирает ваши ответы в карту, которая помогает увидеть в себе опору, талант и направление роста.</div>
+    </div>
+    <div id="portraitContent"></div>
+    <div class="portrait-situation">
+      <div class="portrait-label">Совет под вашу ситуацию</div>
+      <div class="portrait-text">Опишите, что происходит сейчас — Viora ответит с учётом вашего профиля.</div>
+      <textarea class="portrait-textarea" id="portraitSituation" placeholder="Например: я боюсь принять решение, устал от отношений, не понимаю куда двигаться..."></textarea>
+      <button class="mini-btn" id="portraitAdviceBtn">Получить совет</button>
+      <div class="portrait-answer" id="portraitAdvice"></div>
+    </div>
+  </div>
 </div>
 
 <!-- Test Modal -->
@@ -791,8 +915,12 @@ let ST = JSON.parse(localStorage.getItem('nd2_state')||'null') || {
   scores:{logic:0,creativity:0,depth:0},
   completed:[],
   theses:[],
-  mood:[]
+  mood:[],
+  journey:[],
+  patterns:[]
 };
+ST.journey=ST.journey||[];
+ST.patterns=ST.patterns||[];
 
 const KEYS=['j3mqlc3v9pZuvsRLE3D2s7scygdudqe1','G9CuVLq1Sfw7BZr4kSBuCReNrHvQNsno'];
 let ki=0;
@@ -819,7 +947,7 @@ function initBrain(){
   const geo=new THREE.BufferGeometry();
   const pos=new Float32Array(PC*3);
   pColors=new Float32Array(PC*3);
-  const cols={logic:new THREE.Color(0x14A098),creativity:new THREE.Color(0xCB2D6F),depth:new THREE.Color(0x9B4F7E)};
+  const cols={logic:new THREE.Color(0x31F7E8),creativity:new THREE.Color(0xFF4FA3),depth:new THREE.Color(0xB27CFF)};
   for(let i=0;i<PC;i++){
     const phi=Math.acos(-1+(2*i)/PC);
     const th=Math.sqrt(PC*Math.PI)*phi;
@@ -829,14 +957,14 @@ function initBrain(){
     const z=r*Math.sin(phi)*Math.sin(th)*.88;
     pos[i*3]=x;pos[i*3+1]=y;pos[i*3+2]=z;
     const zone=y>.3?'logic':x>0?'creativity':'depth';
-    const intensity=Math.min(1,.35+ST.scores[zone]/80);
+    const intensity=Math.min(1,.62+ST.scores[zone]/90);
     pColors[i*3]=cols[zone].r*intensity;
     pColors[i*3+1]=cols[zone].g*intensity;
     pColors[i*3+2]=cols[zone].b*intensity;
   }
   geo.setAttribute('position',new THREE.BufferAttribute(pos,3));
   geo.setAttribute('color',new THREE.BufferAttribute(pColors,3));
-  pts=new THREE.Points(geo,new THREE.PointsMaterial({size:.016,vertexColors:true,transparent:true,opacity:.88,sizeAttenuation:true}));
+  pts=new THREE.Points(geo,new THREE.PointsMaterial({size:window.innerWidth<520?.028:.019,vertexColors:true,transparent:true,opacity:.96,sizeAttenuation:true,blending:THREE.AdditiveBlending}));
   scene.add(pts);
   cv.parentElement.addEventListener('mousemove',e=>{
     const r=cv.getBoundingClientRect();
@@ -861,12 +989,12 @@ function initBrain(){
 function flashZone(zone){
   const pos=pts.geometry.attributes.position.array;
   const col=pts.geometry.attributes.color.array;
-  const C={logic:new THREE.Color(0x14A098),creativity:new THREE.Color(0xCB2D6F),depth:new THREE.Color(0x9B4F7E)};
+  const C={logic:new THREE.Color(0x31F7E8),creativity:new THREE.Color(0xFF4FA3),depth:new THREE.Color(0xB27CFF)};
   for(let i=0;i<PC;i++){
     const x=pos[i*3],y=pos[i*3+1];
     const z2=y>.3?'logic':x>0?'creativity':'depth';
     if(z2===zone){
-      const iv=Math.min(1,.55+ST.scores[zone]/60);
+      const iv=Math.min(1,.78+ST.scores[zone]/70);
       col[i*3]=C[zone].r*iv;col[i*3+1]=C[zone].g*iv;col[i*3+2]=C[zone].b*iv;
     }
   }
@@ -894,6 +1022,7 @@ function renderTests(){
   const done=ST.completed.length,total=TREES.length;
   document.getElementById('tpCount').textContent=`${done} / ${total}`;
   document.getElementById('progFill').style.width=`${(done/total)*100}%`;
+  updatePortraitUnlock();
 }
 
 function updateScores(){
@@ -1283,6 +1412,204 @@ document.getElementById('compatSend').addEventListener('click',async()=>{
   document.getElementById('compatSend').disabled=false;
 });
 
+const JOURNEY_QUESTS=[
+  'Что в последнее время забирает у вас больше сил, чем вы признаёте?',
+  'Какая повторяющаяся ситуация будто пытается чему-то вас научить?',
+  'Что вы хотите разрешить себе, но пока удерживаете внутри?',
+  'Где вы чаще выбираете удобство вместо честности с собой?',
+  'Какая ваша сильная сторона стала защитой, а не свободой?',
+  'Какой маленький шаг вернул бы вам ощущение контроля?',
+  'Если бы ваша жизнь стала чуть более настоящей — что изменилось бы первым?'
+];
+
+const PATTERN_DATA=[
+  {id:'delay',label:'Откладываю',text:'Прокрастинация часто защищает не от задачи, а от чувства: стыда, страха ошибки или потери свободы.'},
+  {id:'please',label:'Угодничаю',text:'Желание понравиться может быть способом сохранить безопасность. Вопрос: где вы соглашаетесь ценой себя?'},
+  {id:'control',label:'Контролирую',text:'Контроль появляется там, где психика не доверяет неопределённости. Иногда рост начинается с маленького допуска хаоса.'},
+  {id:'avoid',label:'Избегаю разговоров',text:'Избегание снижает тревогу сейчас, но усиливает внутреннее напряжение потом. Нужен не идеальный разговор, а первый честный сигнал.'},
+  {id:'overthink',label:'Переосмысляю',text:'Слишком много анализа может быть способом не встречаться с решением. Попробуйте спросить: что я уже знаю, но не делаю?'},
+  {id:'tired',label:'Нет сил',text:'Усталость не всегда про лень. Иногда это накопленная цена жизни в режиме постоянного внутреннего напряжения.'}
+];
+
+function renderJourney(){
+  const done=ST.journey.length;
+  const idx=Math.min(done,JOURNEY_QUESTS.length-1);
+  document.getElementById('journeyDay').textContent=`День ${idx+1} / 7`;
+  document.getElementById('questQ').textContent=done>=7?'Путь завершён. Перечитайте ответы: там уже есть карта ваших изменений.':JOURNEY_QUESTS[idx];
+  document.getElementById('questInput').style.display=done>=7?'none':'block';
+  document.getElementById('questBtn').style.display=done>=7?'none':'inline-block';
+  document.getElementById('journeyDots').innerHTML=JOURNEY_QUESTS.map((_,i)=>`<div class="journey-dot ${i<done?'done':''}"></div>`).join('');
+}
+
+document.getElementById('questBtn').addEventListener('click',async()=>{
+  const input=document.getElementById('questInput');
+  const answer=input.value.trim();
+  if(answer.length<20){showNotif('Ответьте чуть подробнее — хотя бы 20 символов');return}
+  const btn=document.getElementById('questBtn');
+  const result=document.getElementById('questResult');
+  const q=document.getElementById('questQ').textContent;
+  btn.textContent='Viora читает...';btn.disabled=true;
+  try{
+    const prompt=`Ты Viora — эмпатичный психологический ассистент. Вопрос: "${q}". Ответ человека: "${answer}". Дай 2-3 конкретных предложения: что в этом ответе важно заметить и какой маленький шаг можно сделать. Без markdown.`;
+    const insight=await callAPI([{role:'user',content:prompt}]);
+    ST.journey.push({q,answer,insight,timestamp:Date.now()});
+    ST.scores.depth=(ST.scores.depth||0)+3;
+    ST.theses.push({zone:'depth',text:`В рефлексии отмечено: ${answer.slice(0,90)}${answer.length>90?'...':''}`,timestamp:Date.now()});
+    save();
+    input.value='';
+    result.innerHTML=`<div class="ai-result">${insight}</div>`;
+    updateScores();renderTheses();renderJourney();flashZone('depth');
+  }catch{showNotif('Не удалось получить инсайт')}
+  btn.textContent='Сохранить и получить инсайт';btn.disabled=false;
+});
+
+function renderPatterns(){
+  const selected=new Set(ST.patterns);
+  document.getElementById('patternTags').innerHTML=PATTERN_DATA.map(p=>`<button class="pattern-tag ${selected.has(p.id)?'active':''}" data-pattern="${p.id}">${p.label}</button>`).join('');
+  const active=PATTERN_DATA.filter(p=>selected.has(p.id));
+  document.getElementById('patternList').innerHTML=active.length?active.map(p=>`<div class="pattern-item">${p.text}</div>`).join(''):'<div class="pattern-item">Выберите 1-2 повторяющихся состояния — здесь появится первичная гипотеза.</div>';
+  document.querySelectorAll('[data-pattern]').forEach(btn=>btn.addEventListener('click',()=>{
+    const id=btn.dataset.pattern;
+    ST.patterns=ST.patterns.includes(id)?ST.patterns.filter(x=>x!==id):[...ST.patterns,id];
+    save();renderPatterns();
+  }));
+}
+
+document.querySelectorAll('[data-support]').forEach(btn=>btn.addEventListener('click',()=>{
+  const map={
+    anxiety:'Сейчас не нужно решать всю жизнь. Назовите 5 предметов вокруг, сделайте 6 медленных выдохов и спросите себя: “какой один следующий шаг безопасен?”',
+    sadness:'Тяжесть часто просит не мотивации, а бережности. Упростите ближайший час: вода, тело, тишина, одно маленькое действие без требования результата.',
+    anger:'Злость показывает границу. Не подавляйте её сразу: запишите “я злюсь, потому что для меня важно…”, а действие выбирайте после паузы.',
+    numb:'Пустота — тоже состояние перегруза. Верните контакт с телом: тёплая вода, опора стопами в пол, одна конкретная фраза “я здесь”.'
+  };
+  document.getElementById('supportResult').textContent=map[btn.dataset.support];
+}));
+
+document.getElementById('situationBtn').addEventListener('click',async()=>{
+  const input=document.getElementById('situationInput');
+  const text=input.value.trim();
+  if(text.length<30){showNotif('Опишите ситуацию подробнее — минимум 30 символов');return}
+  const btn=document.getElementById('situationBtn');
+  const out=document.getElementById('situationResult');
+  btn.textContent='Разбираю...';btn.disabled=true;
+  try{
+    const ctx=ST.theses.slice(-3).map(t=>t.text).join('. ');
+    const prompt=`Ты Viora — психологический ассистент. Ситуация пользователя: "${text}". ${ctx?`Контекст о человеке: ${ctx}.`:''} Разложи коротко по 4 пунктам: эмоция, потребность, возможная мыслительная ловушка, маленький следующий шаг. Пиши чистым текстом без markdown, до 900 символов.`;
+    const r=await callAPI([{role:'user',content:prompt}]);
+    out.innerHTML=`<div class="ai-result">${r.replace(/\n/g,'<br>')}</div>`;
+  }catch{showNotif('Ошибка разбора — попробуйте снова')}
+  btn.textContent='Разобрать ситуацию';btn.disabled=false;
+});
+
+function updatePortraitUnlock(){
+  const btn=document.getElementById('portraitBtn');
+  if(!btn)return;
+  const done=ST.completed.length;
+  const total=TREES.length;
+  const unlocked=done>=total;
+  btn.disabled=!unlocked;
+  btn.textContent=unlocked?'✨ Раскрыть мой портрет':`🔒 Пройдите все тесты (${done}/${total})`;
+}
+
+function getPortraitData(){
+  const zones=[
+    {k:'logic',n:'Логика',e:'⚡'},
+    {k:'creativity',n:'Творчество',e:'✦'},
+    {k:'depth',n:'Глубина',e:'◈'}
+  ];
+  const sorted=zones.sort((a,b)=>(ST.scores[b.k]||0)-(ST.scores[a.k]||0));
+  const top=sorted[0], second=sorted[1], low=sorted[2];
+  const talent={
+    logic:'видеть структуру там, где другие видят хаос. Вы сильны в стратегии, анализе и поиске работающего решения.',
+    creativity:'находить нестандартный путь, когда очевидные варианты не работают. Ваша сила — идеи, гибкость и живое воображение.',
+    depth:'чувствовать скрытые смыслы, мотивы и внутренние состояния. Вы можете быть сильны в поддержке, переговорах и понимании людей.'
+  };
+  const conflict={
+    logic:'между желанием всё контролировать и потребностью довериться живому процессу.',
+    creativity:'между свободой самовыражения и страхом, что ваши идеи не будут поняты.',
+    depth:'между глубокой чувствительностью и привычкой держать многое внутри.'
+  };
+  const crisis={
+    logic:'вам помогает план: отделить факты от тревоги, выбрать один следующий шаг и не пытаться решить всё сразу.',
+    creativity:'вам помогает смена угла: выйти из тупика через движение, разговор, набросок или неожиданный вариант.',
+    depth:'вам помогает честность с собой: назвать чувство, понять потребность и сделать мягкий, но реальный шаг.'
+  };
+  const recovery={
+    logic:'ясность, порядок, список действий, завершение маленькой задачи.',
+    creativity:'смена среды, музыка, движение, творчество без оценки результата.',
+    depth:'тишина, дневник, глубокий разговор, пауза без давления.'
+  };
+  const role={
+    logic:'стратег, аналитик, кризисный решатель',
+    creativity:'создатель, визионер, генератор новых решений',
+    depth:'наставник, медиатор, человек глубокого понимания'
+  };
+  return {top,second,low,talent,conflict,crisis,recovery,role};
+}
+
+function renderPortrait(){
+  const d=getPortraitData();
+  const recent=ST.theses.slice(-4).map(t=>t.text);
+  document.getElementById('portraitIntro').textContent=`Доминирующая зона: ${d.top.e} ${d.top.n}. Дополнительная опора: ${d.second.e} ${d.second.n}.`;
+  document.getElementById('portraitContent').innerHTML=`
+    <div class="portrait-grid">
+      <div class="portrait-card">
+        <div class="portrait-label">Ваш скрытый талант</div>
+        <div class="portrait-text">Ваш талант — ${d.talent[d.top.k]}</div>
+      </div>
+      <div class="portrait-card">
+        <div class="portrait-label">Где вы можете быть сильны</div>
+        <div class="portrait-text">${d.role[d.top.k]}. Это не профессия, а ваша естественная роль в сложных ситуациях.</div>
+      </div>
+      <div class="portrait-card">
+        <div class="portrait-label">Внутренний конфликт</div>
+        <div class="portrait-text">Внутри может быть напряжение ${d.conflict[d.top.k]} Это не слабость, а точка роста.</div>
+      </div>
+      <div class="portrait-card">
+        <div class="portrait-label">Что восстанавливает</div>
+        <div class="portrait-text">${d.recovery[d.top.k]}</div>
+      </div>
+      <div class="portrait-card wide">
+        <div class="portrait-label">Когда становится сложно</div>
+        <div class="portrait-text">В сложной ситуации ${d.crisis[d.top.k]} Не ищите идеальное решение — ищите честный маленький шаг.</div>
+      </div>
+      <div class="portrait-card wide">
+        <div class="portrait-label">Что Viora заметила по ответам</div>
+        <div class="portrait-text">${recent.length?recent.join(' '):'Пока данных мало, но уже видно: вам важно не просто получить результат, а понять себя глубже.'}</div>
+      </div>
+      <div class="portrait-card wide">
+        <div class="portrait-label">Фраза-опора</div>
+        <div class="portrait-text">“Мне не нужно полностью разобраться в себе, чтобы сделать один шаг в сторону себя.”</div>
+      </div>
+    </div>
+  `;
+}
+
+document.getElementById('portraitBtn').addEventListener('click',()=>{
+  if(ST.completed.length<TREES.length){showNotif('Сначала пройдите все тесты');return}
+  renderPortrait();
+  document.getElementById('portraitOverlay').classList.add('on');
+});
+document.getElementById('portraitClose').addEventListener('click',()=>document.getElementById('portraitOverlay').classList.remove('on'));
+document.getElementById('portraitOverlay').addEventListener('click',e=>{if(e.target===e.currentTarget)e.currentTarget.classList.remove('on')});
+
+document.getElementById('portraitAdviceBtn').addEventListener('click',async()=>{
+  const input=document.getElementById('portraitSituation');
+  const text=input.value.trim();
+  if(text.length<25){showNotif('Опишите ситуацию чуть подробнее');return}
+  const btn=document.getElementById('portraitAdviceBtn');
+  const out=document.getElementById('portraitAdvice');
+  const d=getPortraitData();
+  btn.textContent='Viora думает...';btn.disabled=true;
+  try{
+    const th=ST.theses.slice(-5).map(t=>t.text).join('. ');
+    const prompt=`Ты Viora — эмпатичный психологический ассистент. Профиль человека: доминирует ${d.top.n}, слабее проявлена зона ${d.low.n}. Наблюдения: ${th}. Ситуация: "${text}". Дай конкретный совет 4-5 предложений: что происходит, на что опереться, чего избегать и какой один маленький шаг сделать сейчас. Без markdown.`;
+    const r=await callAPI([{role:'user',content:prompt}]);
+    out.innerHTML=r.replace(/\n/g,'<br>');
+  }catch{showNotif('Не удалось получить совет')}
+  btn.textContent='Получить совет';btn.disabled=false;
+});
+
 // ═══════════════════════════════════════════════════════
 //  API
 // ═══════════════════════════════════════════════════════
@@ -1320,6 +1647,8 @@ updateScores();
 renderTheses();
 renderMoodGraph();
 loadInsight();
+renderJourney();
+renderPatterns();
 if(ST.completed.length>0){['logic','creativity','depth'].forEach(z=>{if(ST.scores[z]>0)flashZone(z)})}
 </script>
 </body>
